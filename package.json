@@ -37,6 +37,6 @@
   },
   "dependencies": {
     "commander": "^13.1.0",
-    "octokit": "^4.1.0"
+    "octokit": "^4.1.4"
   }
 }
