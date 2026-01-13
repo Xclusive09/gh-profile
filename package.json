@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "gh-profile": "dist/cli/index.js"
+    "gh-profile": "./dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc",

@@ -8,7 +8,7 @@ export default tseslint.config(
     ignores: ["dist/**", "node_modules/**"],
   },
   {
-    files: ["**/*.ts"],
+    files: ["src/**/*.ts"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.json",
@@ -21,6 +21,14 @@ export default tseslint.config(
       ],
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
+    files: ["tests/**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        project: "./tsconfig.test.json",
+      },
     },
   },
 );
