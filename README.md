@@ -38,30 +38,29 @@ cd gh-profile
 pnpm install
 pnpm build
 
-# optional: make it available globally
+# make it available globally
+pnpm setup              # first time only, then restart terminal
 pnpm link --global
 ```
 
 ## Usage
 
-> **Heads up:** Still building this out. Here's what's planned:
-
 ```bash
-# basic
+# generate README for a GitHub user
 gh-profile generate <username>
 
-# pick a template
-gh-profile generate <username> --template minimal
+# save to a specific file
+gh-profile generate <username> --output ./profile-readme.md
 
-# save somewhere specific
-gh-profile generate <username> --output ./my-readme.md
-
-# use a token for better rate limits
+# use a GitHub token for better rate limits
 gh-profile generate <username> --token <your-token>
 
-# or just export it
+# or set it as an env variable
 export GITHUB_TOKEN=<your-token>
 gh-profile generate <username>
+
+# force overwrite existing file
+gh-profile generate <username> --force
 ```
 
 ### Options
@@ -69,11 +68,50 @@ gh-profile generate <username>
 | Flag | What it does |
 |------|--------------|
 | `generate <username>` | Generate README for a user |
-| `--template <name>` | Pick a template (default: `default`) |
-| `--output <path>` | Where to save it (default: `./README.md`) |
+| `-t, --template <name>` | Pick a template (default: `default`) |
+| `-o, --output <path>` | Where to save it (default: `./README.md`) |
 | `--token <token>` | GitHub token for API access |
+| `-f, --force` | Overwrite existing file |
 | `--help` | Show help |
 | `--version` | Show version |
+
+### Example output
+
+Running `gh-profile generate octocat` generates something like:
+
+```markdown
+# Hi, I'm The Octocat 👋
+
+## About
+
+- 📍 San Francisco
+
+## Stats
+
+| Metric | Count |
+|--------|-------|
+| Public Repos | 8 |
+| Total Stars | 420 |
+| Total Forks | 120 |
+| Followers | 9500 |
+| Following | 9 |
+
+## Languages
+
+- **Ruby**: 3 repos (38%)
+- **JavaScript**: 2 repos (25%)
+
+## Top Repositories
+
+### [hello-world](https://github.com/octocat/hello-world)
+My first repository on GitHub!
+
+⭐ 2500 • 🍴 800
+
+---
+
+📫 Find me on [GitHub](https://github.com/octocat)
+```
 
 ## Dev setup
 
