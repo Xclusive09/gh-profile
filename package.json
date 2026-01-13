@@ -1,0 +1,33 @@
+{
+  "name": "gh-profile",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node src/cli/index.ts",
+    "build": "tsc",
+    "lint": "eslint .",
+    "test": "vitest",
+    "generate": "ts-node src/cli/index.ts generate"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "commander": "^14.0.2"
+  },
+    "packageManager": "pnpm@9.0.0",
+      "bin": {
+    "gh-profile": "dist/cli/index.js"
+  },
+  "devDependencies": {
+    "@types/commander": "^2.12.5",
+    "@types/node": "^25.0.6",
+    "eslint": "^9.39.2",
+    "prettier": "^3.7.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  }
+}
