@@ -1,12 +1,52 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
+build
+out
+
+# Lock files (keep one based on your package manager)
 package-lock.json
 yarn.lock
-/.claude
-./dist
+
+# Environment files
 .env
-.DS_Store
+.env.local
+.env.*.local
+
+# IDE and editors
 .vscode
 .idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
 coverage
+.nyc_output
+
+# Cache
+.cache
+.eslintcache
+.turbo
+*.tsbuildinfo
+
+# Claude/AI
+.claude
+
+# Temporary files
+tmp
+temp
+*.tmp
