@@ -1,5 +1,4 @@
-import { GitHubData } from '../github/types.js';
-
+import type { NormalizedData } from '../core/normalize.js';
 /**
  * Metadata that describes a template
  */
@@ -21,7 +20,7 @@ export interface TemplateMetadata {
 /**
  * A template function that generates markdown from GitHub data
  */
-export type TemplateFunction = (data: GitHubData) => string;
+export type TemplateFunction = (data: NormalizedData) => string;
 
 /**
  * A complete template with metadata and render function

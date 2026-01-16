@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name('gh-profile')
   .description('Generate GitHub profile READMEs from your public activity')
-  .version('1.0.0');
+    .version('1.0.0');
 
 program.addCommand(generateCommand);
 

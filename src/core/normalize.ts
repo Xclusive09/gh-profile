@@ -46,6 +46,8 @@ export function normalizeRepos(repos: GitHubRepo[]): Repository[] {
   return repos.map(normalizeRepo);
 }
 
+export type { NormalizedData } from './models.js';
+
 export function sortByStars(repos: Repository[]): Repository[] {
   return [...repos].sort((a, b) => b.stars - a.stars);
 }

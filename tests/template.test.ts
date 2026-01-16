@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { defaultTemplate } from '../src/templates/default.js';
+import { minimalTemplate } from '../src/templates/minimal.js';
+import { normalize } from '../src/core/normalize.js';
 import type { GitHubUser, GitHubRepo, GitHubData } from '../src/github/types.js';
 
-// Mock factories matching GitHub API types
 const createMockGitHubUser = (overrides: Partial<GitHubUser> = {}): GitHubUser => ({
   login: 'testuser',
   id: 123,
@@ -54,35 +54,43 @@ const createMockGitHubData = (overrides: Partial<GitHubData> = {}): GitHubData =
   ...overrides,
 });
 
-describe('defaultTemplate', () => {
+// Helper to get normalized data (recommended approach)
+const createMockNormalizedData = (overrides: Partial<GitHubData> = {}) => {
+  const rawData = createMockGitHubData(overrides);
+  return normalize(rawData);
+};
+
+describe('minimalTemplate', () => {
   describe('Metadata', () => {
-    it('should have id "default"', () => {
-      expect(defaultTemplate.metadata.id).toBe('default');
+    it('should have correct id', () => {
+      expect(minimalTemplate.metadata.id).toBe('minimal');
     });
 
     it('should have correct metadata', () => {
-      expect(defaultTemplate.metadata).toMatchObject({
-        id: 'default',
-        name: 'Default',
+      expect(minimalTemplate.metadata).toMatchObject({
+        id: 'minimal',
+        name: 'Minimal',
+        description: 'A clean, minimal GitHub profile README template',
         category: 'minimal',
         version: '1.0.0',
+        author: 'gh-profile',
       });
     });
   });
 
   describe('Header Rendering', () => {
     it('should render header with name', () => {
-      const data = createMockGitHubData();
-      const output = defaultTemplate.render(data);
+      const data = createMockNormalizedData();
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain("# Hi, I'm Test User 👋");
     });
 
-    it('should use login as fallback when name is null', () => {
-      const data = createMockGitHubData({
+    it('should use username as fallback when name is null', () => {
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({ name: null }),
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain("# Hi, I'm testuser 👋");
     });
@@ -90,35 +98,36 @@ describe('defaultTemplate', () => {
 
   describe('Bio Section', () => {
     it('should render bio when present', () => {
-      const data = createMockGitHubData();
-      const output = defaultTemplate.render(data);
+      const data = createMockNormalizedData();
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('A passionate developer');
     });
 
-    it('should not render bio when null', () => {
-      const data = createMockGitHubData({
+    it('should not render bio section when bio is null', () => {
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({ bio: null }),
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).not.toContain('null');
+      expect(output).not.toContain('A passionate developer');
     });
   });
 
   describe('Location Section', () => {
     it('should render location when present', () => {
-      const data = createMockGitHubData();
-      const output = defaultTemplate.render(data);
+      const data = createMockNormalizedData();
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('📍 San Francisco');
     });
 
     it('should not render location when null', () => {
-      const data = createMockGitHubData({
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({ location: null }),
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).not.toContain('📍');
     });
@@ -126,103 +135,110 @@ describe('defaultTemplate', () => {
 
   describe('Stats Section', () => {
     it('should render stats table', () => {
-      const data = createMockGitHubData();
-      const output = defaultTemplate.render(data);
+      const data = createMockNormalizedData();
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('## Stats');
-      expect(output).toContain('| Metric | Count |');
+      expect(output).toContain('| Metric       | Value |');
+      expect(output).toContain('| Public Repos | 25 |');
+      expect(output).toContain('| Followers    | 100   |');
     });
 
     it('should include public repos count', () => {
-      const data = createMockGitHubData({
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({ public_repos: 42 }),
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('| Public Repos | 42 |');
     });
 
     it('should include followers count', () => {
-      const data = createMockGitHubData({
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({ followers: 999 }),
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
-      expect(output).toContain('| Followers | 999 |');
+      expect(output).toContain('| Followers    | 999   |');
     });
   });
 
   describe('Repositories Section', () => {
     it('should render top repositories section when repos exist', () => {
-      const data = createMockGitHubData();
-      const output = defaultTemplate.render(data);
+      const data = createMockNormalizedData();
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('## Top Repositories');
     });
 
     it('should not render repositories section when empty', () => {
-      const data = createMockGitHubData({ repos: [] });
-      const output = defaultTemplate.render(data);
+      const data = createMockNormalizedData({ repos: [] });
+      const output = minimalTemplate.render(data);
 
       expect(output).not.toContain('## Top Repositories');
     });
 
-    it('should render repo name as link', () => {
-      const data = createMockGitHubData({
+    it('should render repo name as markdown link', () => {
+      const data = createMockNormalizedData({
         repos: [createMockGitHubRepo({ name: 'my-project' })],
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('[my-project]');
-      expect(output).toContain('https://github.com/testuser/test-repo');
+      expect(output).toContain('(https://github.com/testuser/test-repo)');
     });
 
     it('should render repo description when present', () => {
-      const data = createMockGitHubData({
+      const data = createMockNormalizedData({
         repos: [createMockGitHubRepo({ description: 'My awesome project' })],
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('My awesome project');
     });
 
     it('should render repo stats (stars and forks)', () => {
-      const data = createMockGitHubData({
+      const data = createMockNormalizedData({
         repos: [createMockGitHubRepo({ stargazers_count: 42, forks_count: 7 })],
       });
-      const output = defaultTemplate.render(data);
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('⭐ 42');
       expect(output).toContain('🍴 7');
     });
 
-    it('should limit to 5 repos max', () => {
-      const repos = Array.from({ length: 10 }, (_, i) =>
-          createMockGitHubRepo({ id: i, name: `repo-${i}` })
+    it('should limit to 5 repositories and sort by stars descending', () => {
+      const manyRepos = Array.from({ length: 10 }, (_, i) =>
+          createMockGitHubRepo({
+            id: i,
+            name: `repo-${i}`,
+            stargazers_count: 100 - i * 10, // decreasing stars
+            forks_count: 5,
+          })
       );
-      const data = createMockGitHubData({ repos });
-      const output = defaultTemplate.render(data);
 
-      // Should contain first 5
+      const data = createMockNormalizedData({ repos: manyRepos });
+      const output = minimalTemplate.render(data);
+
+      // Should contain first 5 (highest stars)
       expect(output).toContain('repo-0');
       expect(output).toContain('repo-4');
-      // Should not contain last 5
       expect(output).not.toContain('repo-5');
       expect(output).not.toContain('repo-9');
     });
   });
 
-  describe('Output Quality', () => {
-    it('should produce deterministic output', () => {
-      const data = createMockGitHubData();
-      const output1 = defaultTemplate.render(data);
-      const output2 = defaultTemplate.render(data);
+  describe('Output Quality & Edge Cases', () => {
+    it('produces deterministic output for same input', () => {
+      const data = createMockNormalizedData();
+      const output1 = minimalTemplate.render(data);
+      const output2 = minimalTemplate.render(data);
 
       expect(output1).toBe(output2);
     });
 
-    it('should not contain null or undefined strings', () => {
-      const data = createMockGitHubData({
+    it('never contains null or undefined strings', () => {
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({
           bio: null,
           company: null,
@@ -231,60 +247,56 @@ describe('defaultTemplate', () => {
           twitter_username: null,
           email: null,
         }),
+        repos: [createMockGitHubRepo({ description: null })],
       });
-      const output = defaultTemplate.render(data);
+
+      const output = minimalTemplate.render(data);
 
       expect(output).not.toContain('null');
       expect(output).not.toContain('undefined');
     });
 
-    it('should always render header and stats', () => {
-      const data = createMockGitHubData({
+    it('always renders header and stats section (even with minimal data)', () => {
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({
+          name: null,
           bio: null,
           location: null,
+          public_repos: 0,
+          followers: 0,
         }),
         repos: [],
       });
-      const output = defaultTemplate.render(data);
+
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain("# Hi, I'm");
       expect(output).toContain('## Stats');
     });
 
-    it('should return valid markdown string', () => {
-      const data = createMockGitHubData();
-      const output = defaultTemplate.render(data);
-
-      expect(typeof output).toBe('string');
-      expect(output.length).toBeGreaterThan(0);
-      expect(output).toMatch(/^#/); // Starts with heading
-    });
-  });
-
-  describe('Edge Cases', () => {
-    it('should handle empty description', () => {
-      const data = createMockGitHubData({
-        repos: [createMockGitHubRepo({ description: null })],
-      });
-      const output = defaultTemplate.render(data);
-
-      expect(output).not.toContain('null');
-      expect(output).toContain('## Top Repositories');
-    });
-
-    it('should handle zero stats', () => {
-      const data = createMockGitHubData({
+    it('handles zero stats gracefully', () => {
+      const data = createMockNormalizedData({
         user: createMockGitHubUser({
           public_repos: 0,
           followers: 0,
-          following: 0,
         }),
       });
-      const output = defaultTemplate.render(data);
+
+      const output = minimalTemplate.render(data);
 
       expect(output).toContain('| Public Repos | 0 |');
-      expect(output).toContain('| Followers | 0 |');
+      expect(output).toContain('| Followers    | 0   |');
+    });
+
+    it('handles empty repo description without errors', () => {
+      const data = createMockNormalizedData({
+        repos: [createMockGitHubRepo({ description: null })],
+      });
+
+      const output = minimalTemplate.render(data);
+
+      expect(output).not.toContain('null');
+      expect(output).toContain('## Top Repositories');
     });
   });
 });

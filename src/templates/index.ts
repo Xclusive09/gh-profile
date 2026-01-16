@@ -1,5 +1,5 @@
-import { defaultTemplate } from './default.js';
 import type { Template, TemplateMetadata, TemplateFunction, TemplateRegistryEntry } from './types.js';
+import { minimalTemplate } from './minimal.js';
 
 /**
  * Central registry for all templates
@@ -15,7 +15,8 @@ class TemplateRegistry {
      * Register built-in templates
      */
     private registerBuiltInTemplates(): void {
-        this.register(defaultTemplate, true);
+        this.register(minimalTemplate
+            , true);
     }
 
     /**
