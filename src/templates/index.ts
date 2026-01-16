@@ -1,5 +1,6 @@
 import type { Template, TemplateMetadata, TemplateFunction, TemplateRegistryEntry } from './types.js';
 import { minimalTemplate } from './minimal.js';
+import { showcaseTemplate } from './showcase.js';
 
 /**
  * Central registry for all templates
@@ -17,6 +18,8 @@ class TemplateRegistry {
     private registerBuiltInTemplates(): void {
         this.register(minimalTemplate
             , true);
+        this.register(showcaseTemplate, true);
+
     }
 
     /**
