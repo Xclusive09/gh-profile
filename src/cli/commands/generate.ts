@@ -3,6 +3,7 @@ import { GitHubClient } from '../../github/client.js';
 import { normalize } from '../../core/normalize.js';
 import { getTemplate, templateRegistry } from '../../templates/index.js';
 import { writeOutput } from '../../output/writer.js';
+import { loadConfig } from '../../config/loadConfig.js';
 
 export interface GenerateOptions {
   template?: string;
@@ -52,17 +53,24 @@ export const generateCommand = new Command('generate')
     .option('-o, --output <path>', 'output file path', './README.md')
     .option('--token <token>', 'GitHub personal access token')
     .option('-f, --force', 'overwrite existing file without prompting', false)
-    .addHelpText('after', `
-Run one of the following for more help:
-  gh-profile generate --help        detailed command usage + templates + token info
-  gh-profile generate username      start generating your README
-`)
-    .action(async (username: string, options: GenerateOptions) => {
-      const token = options.token || process.env.GITHUB_TOKEN;
-      const client = new GitHubClient({ token });
-
+    .addHelpText('after', getRichHelpText(true))
+    .action(async (username: string, cliOptions: GenerateOptions) => {
       try {
-        const templateId = options.template || DEFAULT_TEMPLATE_ID;
+        // Load config file (if exists)
+        const fileConfig = await loadConfig();
+
+        // Merge: file config first, then CLI options override
+        const mergedOptions: GenerateOptions = {
+          ...fileConfig,
+          ...cliOptions,
+          // Ensure output is always set (CLI default or provided)
+          output: cliOptions.output ?? fileConfig.output ?? './README.md',
+        };
+
+        const token = mergedOptions.token || process.env.GITHUB_TOKEN;
+        const client = new GitHubClient({ token });
+
+        const templateId = mergedOptions.template || DEFAULT_TEMPLATE_ID;
         if (!templateRegistry.has(templateId)) {
           const available = templateRegistry.listMetadata().map(m => m.id).join(', ');
           throw new Error(`Template '${templateId}' not found. Available: ${available}`);
@@ -79,8 +87,8 @@ Run one of the following for more help:
         const content = template.render(normalizedData);
 
         console.log('💾 Writing output...');
-        const result = await writeOutput(content, options.output!, {
-          overwrite: options.force ?? false,
+        const result = await writeOutput(content, mergedOptions.output, {
+          overwrite: mergedOptions.force ?? false,
         });
 
         console.log('\n✅ Successfully generated README!');
