@@ -1,5 +1,5 @@
-
 import chalk from 'chalk';
+import ora from 'ora';
 
 export enum ExitCode {
     Success = 0,
@@ -8,71 +8,81 @@ export enum ExitCode {
     ValidationError = 3,
     NetworkError = 4,
     FileSystemError = 5,
+    ConfigError = 6,
 }
 
 export class Logger {
-    private spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-    private spinnerInterval: NodeJS.Timeout | null = null;
-    private currentSpinnerMessage: string | null = null;
+    private spinner = ora({
+        color: 'cyan',
+        spinner: 'dots',
+        discardStdin: false,
+    });
 
     info(message: string): void {
-        this.stopSpinner();
+        this.spinner.stop();
         console.log(chalk.blue('ℹ'), message);
     }
 
     success(message: string): void {
-        this.stopSpinner();
-        console.log(chalk.green('✓'), message);
+        this.spinner.succeed(chalk.green(message));
     }
 
-    warning(message: string): void {
-        this.stopSpinner();
-        console.log(chalk.yellow('⚠'), message);
+    warn(message: string): void {
+        this.spinner.warn(chalk.yellow(message));
     }
 
-    error(message: string, code: ExitCode = ExitCode.GeneralError): never {
-        this.stopSpinner();
-        console.error(chalk.red('✖'), message);
+    error(message: string | Error, code: ExitCode = ExitCode.GeneralError): never {
+        this.spinner.fail();
+        const msg = message instanceof Error ? message.message : message;
+        console.error(chalk.red('✖'), msg);
         process.exit(code);
     }
 
     step(message: string): void {
-        this.stopSpinner();
+        this.spinner.stop();
         console.log(chalk.cyan('→'), message);
     }
 
-    startSpinner(message: string): void {
-        this.stopSpinner();
-        this.currentSpinnerMessage = message;
-        let i = 0;
-
-        this.spinnerInterval = setInterval(() => {
-            process.stdout.write(`\r${this.spinnerFrames[i]} ${message}`);
-            i = (i + 1) % this.spinnerFrames.length;
-        }, 80);
+    start(message: string): void {
+        this.spinner.start(message);
     }
 
-    stopSpinner(success = true): void {
-        if (this.spinnerInterval) {
-            clearInterval(this.spinnerInterval);
-            this.spinnerInterval = null;
-
-            if (this.currentSpinnerMessage) {
-                process.stdout.write('\r');
-                if (success) {
-                    this.success(this.currentSpinnerMessage);
-                }
-                this.currentSpinnerMessage = null;
-            }
+    stop(success = true): void {
+        if (success) {
+            this.spinner.succeed();
+        } else {
+            this.spinner.fail();
         }
     }
 
-    newLine(): void {
-        console.log();
+    newline(count = 1): void {
+        console.log('\n'.repeat(count));
     }
 
-    stats(label: string, value: string | number): void {
-        console.log(chalk.gray('  •'), `${chalk.white(label)}: ${chalk.cyan(value)}`);
+    header(title: string): void {
+        this.newline();
+        console.log(chalk.bold.underline(title));
+        this.newline();
+    }
+
+    keyValue(key: string, value: string | number): void {
+        console.log(chalk.gray('  •'), chalk.white(key.padEnd(14)), chalk.cyan(value));
+    }
+
+    box(title: string, content: string): void {
+        const lines = content.split('\n');
+        const maxLen = Math.max(...lines.map(l => l.length), title.length) + 4;
+        const border = '─'.repeat(maxLen + 2);
+
+        console.log(chalk.gray('┌' + border + '┐'));
+        console.log(chalk.gray('│') + chalk.bold(` ${title} `.padEnd(maxLen + 2)) + chalk.gray('│'));
+        console.log(chalk.gray('├' + border + '┤'));
+
+        lines.forEach(line => {
+            console.log(chalk.gray('│ ') + line.padEnd(maxLen) + chalk.gray(' │'));
+        });
+
+        console.log(chalk.gray('└' + border + '┘'));
     }
 }
 

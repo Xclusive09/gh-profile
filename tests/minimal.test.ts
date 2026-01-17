@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { minimalTemplate } from '../src/templates/minimal.js';
 import { normalize } from '../src/core/normalize.js';
 import type { GitHubUser, GitHubRepo, GitHubData } from '../src/github/types.js';
-// import type { Profile, Repository } from '../src/core/models.js'; // adjust path if needed
-
 
 const createMockGitHubUser = (overrides: Partial<GitHubUser> = {}): GitHubUser => ({
     login: 'testuser',
@@ -56,7 +54,6 @@ const createMockGitHubData = (overrides: Partial<GitHubData> = {}): GitHubData =
     ...overrides,
 });
 
-// Helper to create normalized data (most realistic way for testing)
 const createNormalizedData = (overrides: Partial<GitHubData> = {}) => {
     const raw = createMockGitHubData(overrides);
     return normalize(raw);
@@ -64,13 +61,13 @@ const createNormalizedData = (overrides: Partial<GitHubData> = {}) => {
 
 describe('minimalTemplate', () => {
     describe('Metadata', () => {
-        it('should have correct metadata', () => {
-            expect(minimalTemplate.metadata).toEqual({
+        it('has correct metadata', () => {
+            expect(minimalTemplate.metadata).toMatchObject({
                 id: 'minimal',
                 name: 'Minimal',
                 description: 'A clean, minimal GitHub profile README template',
                 category: 'minimal',
-                version: '1.0.0',
+                version: '0.1.0',
                 author: 'gh-profile',
             });
         });
@@ -79,22 +76,14 @@ describe('minimalTemplate', () => {
     describe('Rendering - Happy path', () => {
         it('renders basic profile and repo information correctly', () => {
             const normalized = createNormalizedData();
-
             const output = minimalTemplate.render(normalized);
 
-            // Header
             expect(output).toContain("# Hi, I'm Test User 👋");
-
-            // Bio & location
             expect(output).toContain('A passionate developer');
             expect(output).toContain('📍 San Francisco');
-
-            // Stats table
             expect(output).toContain('## Stats');
             expect(output).toContain('| Public Repos | 25 |');
             expect(output).toContain('| Followers    | 100   |');
-
-            // Repositories section
             expect(output).toContain('## Top Repositories');
             expect(output).toContain('[test-repo](https://github.com/testuser/test-repo)');
             expect(output).toContain('A test repository');
@@ -103,81 +92,64 @@ describe('minimalTemplate', () => {
     });
 
     describe('Rendering - Edge cases', () => {
-        it('handles missing name (falls back to username)', () => {
+        it('falls back to username when name is missing', () => {
             const normalized = createNormalizedData({
                 user: createMockGitHubUser({ name: null }),
             });
-
-            const output = minimalTemplate.render(normalized);
-
-            expect(output).toContain("# Hi, I'm testuser 👋");
+            expect(minimalTemplate.render(normalized)).toContain("# Hi, I'm testuser 👋");
         });
 
-        it('omits bio section when bio is missing', () => {
+        it('omits bio when missing', () => {
             const normalized = createNormalizedData({
                 user: createMockGitHubUser({ bio: null }),
             });
-
             const output = minimalTemplate.render(normalized);
-
             expect(output).not.toContain('null');
-            expect(output).not.toMatch(/A passionate developer/);
+            expect(output).not.toContain('A passionate developer');
         });
 
         it('omits location when missing', () => {
             const normalized = createNormalizedData({
                 user: createMockGitHubUser({ location: null }),
             });
-
-            const output = minimalTemplate.render(normalized);
-
-            expect(output).not.toContain('📍');
+            expect(minimalTemplate.render(normalized)).not.toContain('📍');
         });
 
-        it('does not render repositories section when there are no repos', () => {
+        it('omits repositories section when no repos', () => {
             const normalized = createNormalizedData({ repos: [] });
-
-            const output = minimalTemplate.render(normalized);
-
-            expect(output).not.toContain('## Top Repositories');
+            expect(minimalTemplate.render(normalized)).not.toContain('## Top Repositories');
         });
 
         it('limits to 5 repositories and sorts by stars descending', () => {
             const manyRepos = Array.from({ length: 8 }, (_, i) =>
                 createMockGitHubRepo({
                     name: `repo-${i}`,
-                    stargazers_count: 100 - i * 10, // decreasing stars
+                    stargazers_count: 100 - i * 10,
                     forks_count: 5,
                 })
             );
 
             const normalized = createNormalizedData({ repos: manyRepos });
-
             const output = minimalTemplate.render(normalized);
 
-            // Should include top 5
-            expect(output).toContain('repo-0');
+            expect(output).toContain('repo-0'); // highest stars
             expect(output).toContain('repo-4');
-            expect(output).not.toContain('repo-5');
+            expect(output).not.toContain('repo-5'); // outside top 5
             expect(output).not.toContain('repo-7');
 
-            // Should be in descending order of stars
-            const firstRepoIndex = output.indexOf('repo-0');
-            const secondRepoIndex = output.indexOf('repo-1');
-            expect(firstRepoIndex).toBeLessThan(secondRepoIndex);
+            const first = output.indexOf('repo-0');
+            const second = output.indexOf('repo-1');
+            expect(first).toBeLessThan(second);
         });
     });
 
     describe('Output quality', () => {
-        it('produces deterministic output for same input', () => {
+        it('produces deterministic output', () => {
             const data = createNormalizedData();
-            const output1 = minimalTemplate.render(data);
-            const output2 = minimalTemplate.render(data);
-
-            expect(output1).toBe(output2);
+            expect(minimalTemplate.render(data)).toBe(minimalTemplate.render(data));
         });
 
-        it('never contains null or undefined strings', () => {
+        it('never contains null/undefined', () => {
             const data = createNormalizedData({
                 user: createMockGitHubUser({
                     bio: null,
@@ -189,9 +161,7 @@ describe('minimalTemplate', () => {
                     createMockGitHubRepo({ description: null }),
                 ],
             });
-
             const output = minimalTemplate.render(data);
-
             expect(output).not.toContain('null');
             expect(output).not.toContain('undefined');
         });

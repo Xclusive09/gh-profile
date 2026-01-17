@@ -1,5 +1,5 @@
 import type { Template } from './types.js';
-import type { NormalizedData } from '../core/normalize.js';
+import type { NormalizedData } from '../core/models.js';
 
 export const minimalTemplate: Template = {
     metadata: {
@@ -7,55 +7,54 @@ export const minimalTemplate: Template = {
         name: 'Minimal',
         description: 'A clean, minimal GitHub profile README template',
         category: 'minimal',
-        version: '1.0.0',
+        version: '0.1.0',
         author: 'gh-profile',
     },
 
     render(data: NormalizedData): string {
         const { profile, repos } = data;
+        const displayName = profile.name || profile.username;
 
-        let markdown = `# Hi, I'm ${profile.name} 👋\n\n`;
+        let md = `# Hi, I'm ${displayName} 👋\n\n`;
 
         if (profile.bio) {
-            markdown += `${profile.bio}\n\n`;
+            md += `${profile.bio}\n\n`;
         }
 
         if (profile.location) {
-            markdown += `📍 ${profile.location}\n\n`;
+            md += `📍 ${profile.location}\n\n`;
         }
 
-        // Optional: add more profile fields if you want
         if (profile.company) {
-            markdown += `🏢 ${profile.company}\n\n`;
+            md += `🏢 ${profile.company}\n\n`;
         }
 
-        // Stats section — use fields from Profile + you can use stats later
-        markdown += `## Stats\n\n`;
-        markdown += `| Metric       | Value |\n`;
-        markdown += `|--------------|-------|\n`;
-        markdown += `| Public Repos | ${profile.publicRepos} |\n`;
-        markdown += `| Followers    | ${profile.followers}   |\n\n`;
+        // Simple stats
+        md += `## Stats\n\n`;
+        md += `| Metric       | Value |\n`;
+        md += `|--------------|-------|\n`;
+        md += `| Public Repos | ${profile.publicRepos} |\n`;
+        md += `| Followers    | ${profile.followers}   |\n\n`;
 
-        // Top repositories section
+        // Top repositories (limited to 5, sorted by stars)
         if (repos.length > 0) {
-            markdown += `## Top Repositories\n\n`;
+            md += `## Top Repositories\n\n`;
 
-            // Optional: sort by stars (recommended)
-            const sortedRepos = [...repos]
+            const topRepos = [...repos]
                 .sort((a, b) => b.stars - a.stars)
                 .slice(0, 5);
 
-            sortedRepos.forEach(repo => {
-                markdown += `### [${repo.name}](${repo.url})\n`;
+            topRepos.forEach(repo => {
+                md += `### [${repo.name}](${repo.url})\n`;
 
                 if (repo.description) {
-                    markdown += `${repo.description}\n\n`;
+                    md += `${repo.description}\n\n`;
                 }
 
-                markdown += `⭐ ${repo.stars} • 🍴 ${repo.forks}\n\n`;
+                md += `⭐ ${repo.stars} • 🍴 ${repo.forks}\n\n`;
             });
         }
 
-        return markdown;
+        return md.trim();
     },
 };

@@ -1,4 +1,3 @@
-
 import type { Template } from './types.js';
 import type { NormalizedData } from '../core/normalize.js';
 
@@ -6,122 +5,113 @@ export const showcaseTemplate: Template = {
     metadata: {
         id: 'showcase',
         name: 'Showcase',
-        description: 'A feature-rich template highlighting your best work',
+        description: 'Beautiful, modern layout highlighting your best work and personality',
         category: 'showcase',
-        version: '1.0.0',
+        version: '1.1.0',
         author: 'gh-profile',
     },
 
     render(data: NormalizedData): string {
         const { profile, stats } = data;
+        const name = profile.name || profile.username;
 
-        let markdown = `<h1 align="center">Hi 👋, I'm ${profile.name}</h1>`;
+        let md = `<div align="center">\n`;
 
-        // Rich header with centered layout
+        md += `  <h1>Hey there 👋 I'm ${name}</h1>\n\n`;
+
         if (profile.bio) {
-            markdown += `\n<h3 align="center">${profile.bio}</h3>\n\n`;
+            md += `  <h3>${profile.bio}</h3>\n\n`;
         }
 
-        // Extended About section with icons
-        markdown += '\n## About Me\n\n';
+        md += `</div>\n\n`;
 
-        const aboutItems: string[] = [];
+        // Connect section
+        md += `## Connect with me\n\n`;
 
-        if (profile.location) {
-            aboutItems.push(`🌍 Based in **${profile.location}**`);
-        }
+        const links: string[] = [];
 
-        if (profile.company) {
-            aboutItems.push(`💼 Currently working at **${profile.company}**`);
-        }
+        if (profile.location) links.push(`🌍 ${profile.location}`);
+        if (profile.company) links.push(`💼 ${profile.company}`);
+        if (profile.blog) links.push(`🌐 [${profile.blog.replace(/^https?:\/\//, '')}](${profile.blog})`);
+        if (profile.twitter) links.push(`🐦 [@${profile.twitter}](https://twitter.com/${profile.twitter})`);
+        if (profile.email) links.push(`✉️ [${profile.email}](mailto:${profile.email})`);
 
-        if (profile.blog) {
-            aboutItems.push(`🌐 Visit my [website](${profile.blog})`);
-        }
+        md += links.map(item => `**${item}**`).join('  ·  ') + '\n\n';
 
-        if (profile.twitter) {
-            aboutItems.push(`🐦 Follow me on [Twitter](https://twitter.com/${profile.twitter})`);
-        }
+        // Stats overview
+        md += `## GitHub at a Glance\n\n`;
 
-        if (profile.email) {
-            aboutItems.push(`✉️ Contact me at [${profile.email}](mailto:${profile.email})`);
-        }
+        md += `| Metric            | Value              |\n`;
+        md += `|-------------------|--------------------|\n`;
+        md += `| Repositories      | ${stats.totalRepos.toLocaleString()} |\n`;
+        md += `| Total Stars       | ${stats.totalStars.toLocaleString()} ⭐ |\n`;
+        md += `| Forks             | ${stats.totalForks.toLocaleString()} 🍴 |\n`;
+        md += `| Followers         | ${profile.followers.toLocaleString()} 👥 |\n`;
+        md += `| Following         | ${profile.following.toLocaleString()} 👀 |\n\n`;
 
-        markdown += aboutItems.join('\n\n') + '\n\n';
-
-        // Expanded Stats section with more metrics
-        markdown += '## Stats\n\n';
-        markdown += '| Metric | Count |\n';
-        markdown += '|--------|-------|\n';
-        markdown += `| Repositories | ${stats.totalRepos} |\n`;
-        markdown += `| Stars Earned | ${stats.totalStars} |\n`;
-        markdown += `| Forks | ${stats.totalForks} |\n`;
-        markdown += `| Followers | ${profile.followers} |\n`;
-        markdown += `| Following | ${profile.following} |\n\n`;
-
-        // Technologies section
+        // Languages with progress bars
         if (stats.languages.length > 0) {
-            markdown += '## Technologies\n\n';
+            md += `## Top Technologies\n\n`;
 
-            // Show language distribution with percentage bars
-            stats.languages.forEach(lang => {
-                const bar = '█'.repeat(Math.round(lang.percentage / 5)); // 20 chars max
-                markdown += `${lang.name} ${bar} ${lang.percentage}%\n`;
-            });
+            const max = Math.max(...stats.languages.map(l => l.count));
 
-            markdown += '\n';
-        }
-
-        // Featured Projects section
-        if (stats.topRepos.length > 0) {
-            markdown += '## Featured Projects\n\n';
-
-            stats.topRepos.slice(0, 4).forEach(repo => {
-                markdown += `### ⭐ [${repo.name}](${repo.url})\n\n`;
-
-                if (repo.description) {
-                    markdown += `> ${repo.description}\n\n`;
-                }
-
-                // Enhanced project stats
-                const stats: string[] = [];
-
-                if (repo.stars > 0) stats.push(`⭐ ${repo.stars} stars`);
-                if (repo.forks > 0) stats.push(`🍴 ${repo.forks} forks`);
-                if (repo.watchers > 0) stats.push(`👀 ${repo.watchers} watchers`);
-                if (repo.language) stats.push(`💻 ${repo.language}`);
-
-                markdown += stats.join(' · ') + '\n\n';
-
-                if (repo.topics && repo.topics.length > 0) {
-                    markdown += repo.topics.map(topic => `\`${topic}\``).join(' ') + '\n\n';
-                }
-            });
-        }
-
-        // Recent Activity section
-        if (stats.recentRepos.length > 0) {
-            markdown += '## Recent Activity\n\n';
-
-            stats.recentRepos.slice(0, 3).forEach(repo => {
-                const date = repo.pushedAt.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
+            stats.languages
+                .sort((a, b) => b.percentage - a.percentage)
+                .forEach(lang => {
+                    const width = Math.round((lang.count / max) * 25);
+                    const bar = '█'.repeat(width) + '░'.repeat(25 - width);
+                    md += `\`${lang.name.padEnd(14)}\` ${bar} **${lang.percentage}%**\n`;
                 });
 
-                markdown += `- 📦 Pushed to [${repo.name}](${repo.url}) on ${date}\n`;
-            });
-
-            markdown += '\n';
+            md += '\n';
         }
 
-        // Footer with GitHub profile link
-        markdown += `---\n\n`;
-        markdown += `<p align="center">`;
-        markdown += `<a href="${profile.profileUrl}">View GitHub Profile</a>`;
-        markdown += `</p>\n`;
+        // Featured work
+        if (stats.topRepos.length > 0) {
+            md += `## Featured Projects\n\n`;
 
-        return markdown;
+            stats.topRepos.slice(0, 6).forEach(r => {
+                md += `### [${r.name}](${r.url})\n`;
+
+                if (r.description) {
+                    md += `> ${r.description.trim()}\n\n`;
+                }
+
+                const info = [
+                    r.stars > 0 ? `⭐ ${r.stars.toLocaleString()}` : '',
+                    r.forks > 0 ? `🍴 ${r.forks}` : '',
+                    r.language ? `💻 ${r.language}` : '',
+                ].filter(Boolean);
+
+                if (info.length) md += info.join(' · ') + '\n\n';
+
+                if (r.topics?.length) {
+                    md += r.topics.map(t => `\`${t}\``).join(' ') + '\n\n';
+                }
+            });
+        }
+
+        // Recent updates
+        if (stats.recentRepos.length > 0) {
+            md += `## Recent Activity\n\n`;
+
+            stats.recentRepos.slice(0, 5).forEach(r => {
+                const date = r.pushedAt.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                });
+                md += `- 📦 Updated [**${r.name}**](${r.url}) — ${date}\n`;
+            });
+
+            md += '\n';
+        }
+
+        md += `---\n\n`;
+        md += `<p align="center">\n`;
+        md += `  <sub>Generated with <a href="https://github.com/yourusername/gh-profile">gh-profile</a> • ${new Date().getFullYear()}</sub>\n`;
+        md += `</p>\n`;
+
+        return md.trim();
     },
 };

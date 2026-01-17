@@ -1,7 +1,5 @@
-
 import type { Template } from './types.js';
-import type { NormalizedData } from '../core/normalize.js';
-import { Repository } from '../core/models.js';
+import type { NormalizedData, Repository } from '../core/models.js';
 
 export const statsHeavyTemplate: Template = {
     metadata: {
@@ -54,7 +52,7 @@ export const statsHeavyTemplate: Template = {
         // Repository Timeline
         markdown += '## Repository Timeline\n\n';
         markdown += '| Year | New Repositories | Total Stars | Forks |\n';
-        markdown += '|------|-----------------|-------------|-------|\n';
+        markdown += '|------|------------------|-------------|-------|\n';
 
         const timeline = calculateTimeline(repos);
         Object.entries(timeline)
@@ -67,7 +65,7 @@ export const statsHeavyTemplate: Template = {
         // Top Performing Repositories
         markdown += '## Top Performing Repositories\n\n';
         markdown += '| Repository | Stars | Forks | Issues | Created | Last Push |\n';
-        markdown += '|------------|-------|-------|---------|---------|------------|\n';
+        markdown += '|------------|-------|-------|--------|---------|-----------|\n';
 
         getTopRepos(repos, 5).forEach(repo => {
             markdown += `| [${repo.name}](${repo.url}) | ${repo.stars} | ${repo.forks} | ${repo.issues} | `;
@@ -78,7 +76,8 @@ export const statsHeavyTemplate: Template = {
     },
 };
 
-// Helper functions
+// ── Helper functions
+
 function getAccountAge(date: Date): number {
     const diff = new Date().getTime() - date.getTime();
     return Math.round(diff / (1000 * 60 * 60 * 24 * 365) * 10) / 10;
