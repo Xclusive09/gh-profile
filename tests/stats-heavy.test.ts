@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { statsHeavyTemplate } from '../src/templates/stats-heavy.js';
 import type { NormalizedData, Profile, Repository } from '../src/core/models.js';
 
-// ── Test Factories ───────────────────────────────────────────────────────
+vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
 
 function createMockProfile(overrides: Partial<Profile> = {}): Profile {
     return {
@@ -19,7 +19,7 @@ function createMockProfile(overrides: Partial<Profile> = {}): Profile {
         followers: 100,
         following: 50,
         publicRepos: 25,
-        createdAt: new Date('2020-01-01'),
+        createdAt: new Date('2020-01-01T00:00:00Z'),
         ...overrides,
     };
 }
@@ -39,14 +39,13 @@ function createMockRepo(overrides: Partial<Repository> = {}): Repository {
         homepage: null,
         isFork: false,
         isArchived: false,
-        createdAt: new Date('2021-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        pushedAt: new Date('2024-01-15'),
+        createdAt: new Date('2021-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
+        pushedAt: new Date('2024-01-15T00:00:00Z'),
         ...overrides,
     };
 }
 
-// Default happy-path data (used by most tests)
 function createDefaultData(): NormalizedData {
     const repos = [
         createMockRepo({ language: 'TypeScript', stars: 100 }),
@@ -74,7 +73,7 @@ function createDefaultData(): NormalizedData {
 
 describe('statsHeavyTemplate', () => {
     describe('Metadata', () => {
-        it('should have correct metadata', () => {
+        it('has correct metadata', () => {
             expect(statsHeavyTemplate.metadata).toMatchObject({
                 id: 'stats-heavy',
                 name: 'Stats Heavy',
@@ -87,47 +86,33 @@ describe('statsHeavyTemplate', () => {
         const defaultData = createDefaultData();
         const defaultOutput = statsHeavyTemplate.render(defaultData);
 
-        it('should render account metrics', () => {
+        it('renders account metrics', () => {
             expect(defaultOutput).toContain('## Account Metrics');
             expect(defaultOutput).toContain('Account Age | 6 years');
+            expect(defaultOutput).toContain('Public Repositories | 25');
             expect(defaultOutput).toContain('Followers | 100');
             expect(defaultOutput).toContain('Following | 50');
+            expect(defaultOutput).toContain('Following Ratio | 2.00');
         });
 
-        it('should render repository analytics', () => {
+        it('renders repository analytics', () => {
             expect(defaultOutput).toContain('## Repository Analytics');
             expect(defaultOutput).toContain('Total Stars | 175');
             expect(defaultOutput).toContain('Total Forks | 30');
         });
 
-        it('should render language distribution', () => {
+        it('renders language distribution', () => {
             expect(defaultOutput).toContain('## Language Distribution');
             expect(defaultOutput).toContain('TypeScript');
             expect(defaultOutput).toContain('JavaScript');
             expect(defaultOutput).toContain('Python');
         });
 
-        it('should render repository timeline with multiple years', () => {
-            // ── Special data just for timeline test ─────────────────────────
+        it('renders repository timeline with multiple years', () => {
             const timelineRepos = [
-                createMockRepo({
-                    name: 'repo-2021',
-                    createdAt: new Date('2021-06-12'),
-                    stars: 100,
-                    language: 'TypeScript'
-                }),
-                createMockRepo({
-                    name: 'repo-2023',
-                    createdAt: new Date('2023-11-05'),
-                    stars: 60,
-                    language: 'JavaScript'
-                }),
-                createMockRepo({
-                    name: 'repo-2024',
-                    createdAt: new Date('2024-09-28'),
-                    stars: 40,
-                    language: 'Python'
-                }),
+                createMockRepo({ name: 'repo-2021', createdAt: new Date('2021-06-12'), stars: 100, language: 'TypeScript' }),
+                createMockRepo({ name: 'repo-2023', createdAt: new Date('2023-11-05'), stars: 60, language: 'JavaScript' }),
+                createMockRepo({ name: 'repo-2024', createdAt: new Date('2024-09-28'), stars: 40, language: 'Python' }),
             ];
 
             const timelineData: NormalizedData = {
@@ -155,23 +140,37 @@ describe('statsHeavyTemplate', () => {
             expect(output).toContain('| 2021 |');
         });
 
-        it('should render top performing repositories', () => {
+        it('renders top performing repositories', () => {
             expect(defaultOutput).toContain('## Top Performing Repositories');
-            expect(defaultOutput).toContain('Stars | Forks | Issues |');
+            expect(defaultOutput).toContain('| Stars | Forks | Issues |');
         });
     });
 
     describe('Edge Cases', () => {
-        it('should handle empty repository list', () => {
-            const data = { ...createDefaultData(), repos: [], stats: { ...createDefaultData().stats, totalStars: 0, totalForks: 0, totalRepos: 0 } };
-            const output = statsHeavyTemplate.render(data);
+        it('handles empty repository list gracefully', () => {
+            const emptyData: NormalizedData = {
+                profile: createMockProfile({ publicRepos: 0 }), // ← make sure profile reflects 0 repos
+                repos: [],
+                stats: {
+                    totalStars: 0,
+                    totalForks: 0,
+                    totalRepos: 0,
+                    languages: [],
+                    topRepos: [],
+                    recentRepos: [],
+                },
+            };
+
+            const output = statsHeavyTemplate.render(emptyData);
 
             expect(output).not.toContain('null');
             expect(output).not.toContain('NaN');
             expect(output).toContain('Total Stars | 0');
+            expect(output).toContain('Public Repositories | 0');
+
         });
 
-        it('should handle repositories without language', () => {
+        it('handles repositories without language', () => {
             const data = createDefaultData();
             data.repos = [createMockRepo({ language: null })];
 
@@ -181,7 +180,7 @@ describe('statsHeavyTemplate', () => {
             expect(output).toContain('## Language Distribution');
         });
 
-        it('should handle zero followers/following', () => {
+        it('handles zero followers/following', () => {
             const data = createDefaultData();
             data.profile = createMockProfile({ followers: 0, following: 0 });
 

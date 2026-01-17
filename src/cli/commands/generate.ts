@@ -4,6 +4,7 @@ import { normalize } from '../../core/normalize.js';
 import { getTemplate, templateRegistry } from '../../templates/index.js';
 import { writeOutput } from '../../output/writer.js';
 import { loadConfig } from '../../config/loadConfig.js';
+import { logger, ExitCode } from '../../cli/logger.js';
 
 export interface GenerateOptions {
   template?: string;
@@ -42,6 +43,31 @@ GitHub Token (recommended):
   `;
 }
 
+function validateTemplate(templateId: string): void {
+  if (!templateRegistry.has(templateId)) {
+    const available = templateRegistry.listMetadata().map(m => m.id).join(', ');
+    logger.error(
+        `Template '${templateId}' not found.\nAvailable templates: ${available}`,
+        ExitCode.ValidationError
+    );
+  }
+}
+
+function validateUsername(username: string): void {
+  if (!username) {
+    logger.error(
+        'Username is required.\nUsage: gh-profile generate <username>',
+        ExitCode.InvalidArguments
+    );
+  }
+  if (!/^[a-zA-Z0-9-]+$/.test(username)) {
+    logger.error(
+        'Invalid username. Username can only contain letters, numbers, and hyphens.',
+        ExitCode.ValidationError
+    );
+  }
+}
+
 export const generateCommand = new Command('generate')
     .description('Generate a GitHub profile README')
     .argument('<username>', 'GitHub username to generate README for')
@@ -56,54 +82,69 @@ export const generateCommand = new Command('generate')
     .addHelpText('after', getRichHelpText(true))
     .action(async (username: string, cliOptions: GenerateOptions) => {
       try {
-        // Load config file (if exists)
+        // Username is guaranteed to be string by Commander
+        validateUsername(username);
+
+        logger.step('Loading configuration...');
         const fileConfig = await loadConfig();
 
-        // Merge: file config first, then CLI options override
-        const mergedOptions: GenerateOptions = {
+        const options: GenerateOptions = {
           ...fileConfig,
           ...cliOptions,
-          // Ensure output is always set (CLI default or provided)
+          // Make sure output always has a fallback
           output: cliOptions.output ?? fileConfig.output ?? './README.md',
         };
 
-        const token = mergedOptions.token || process.env.GITHUB_TOKEN;
+        const templateId = options.template || DEFAULT_TEMPLATE_ID;
+        validateTemplate(templateId);
+
+        const token = options.token || process.env.GITHUB_TOKEN;
         const client = new GitHubClient({ token });
 
-        const templateId = mergedOptions.template || DEFAULT_TEMPLATE_ID;
-        if (!templateRegistry.has(templateId)) {
-          const available = templateRegistry.listMetadata().map(m => m.id).join(', ');
-          throw new Error(`Template '${templateId}' not found. Available: ${available}`);
-        }
-
-        console.log(`📡 Fetching GitHub data for ${username}...`);
+        // ── Fetch
+        logger.startSpinner(`Fetching GitHub data for ${username}...`);
         const rawData = await client.fetchAll(username);
+        logger.stopSpinner();
 
-        console.log('🔄 Normalizing data...');
+        // ── Normalize
+        logger.startSpinner('Processing data...');
         const normalizedData = normalize(rawData);
+        logger.stopSpinner();
 
-        console.log('📝 Generating README...');
+        // ── Generate
+        logger.startSpinner('Generating README...');
         const template = getTemplate(templateId)!;
         const content = template.render(normalizedData);
+        logger.stopSpinner();
 
-        console.log('💾 Writing output...');
-        const result = await writeOutput(content, mergedOptions.output, {
-          overwrite: mergedOptions.force ?? false,
+        // ── Write
+        logger.startSpinner('Saving README...');
+        const result = await writeOutput(content, options.output, {
+          overwrite: options.force ?? false,
         });
+        logger.stopSpinner();
 
-        console.log('\n✅ Successfully generated README!');
-        console.log(`   File: ${result.path}`);
+        // ── Success output
+        logger.newLine();
+        logger.success('README generated successfully!');
+        logger.info(`File saved to: ${result.path}`);
         if (result.overwritten) {
-          console.log('   (overwrote existing file)');
+          logger.warning('Existing file was overwritten');
         }
 
-        console.log('\n📊 Quick stats:');
-        console.log(`   • ${normalizedData.stats.totalRepos} repositories`);
-        console.log(`   • ${normalizedData.stats.totalStars} total stars`);
-        console.log(`   • ${normalizedData.stats.languages.length} languages used`);
-        console.log('');
+        logger.newLine();
+        logger.info('Generation Statistics:');
+        logger.stats('Repositories', normalizedData.stats.totalRepos);
+        logger.stats('Total stars', normalizedData.stats.totalStars);
+        logger.stats('Languages', normalizedData.stats.languages.length);
+        logger.newLine();
+
+        process.exit(ExitCode.Success);
       } catch (error) {
-        console.error('\n❌ Error:', error instanceof Error ? error.message : 'Unknown error');
-        process.exit(1);
+        // All errors from async operations are caught here
+        logger.error(
+            error instanceof Error ? error.message : 'An unknown error occurred',
+            ExitCode.GeneralError
+        );
       }
     });
