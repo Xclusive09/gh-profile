@@ -7,40 +7,51 @@ Generate a slick GitHub profile README from your public activity.
 
 ## What's this?
 
-I got tired of manually updating my GitHub profile README every time I worked on something new. So I built this CLI to do it for me.
+I got tired of manually updating my GitHub profile README every time I worked on something new.  
+So I built this CLI to do it for me.
 
-It pulls your public GitHub data—repos, languages, contribution stats—and spits out a nice Markdown file you can drop into your profile repo.
+It pulls your public GitHub data (repos, languages, stats) and generates a beautiful Markdown file you can drop straight into your profile repository.
 
-## What it does
+## Features
 
-- Grabs your public repos and stats from GitHub
-- Figures out what languages you use most
-- Generates a README from templates you can customize
-- Writes it to a file, done
+- Fetches your public GitHub data (repos, stars, languages, etc.)
+- Supports multiple beautiful templates
+- Runs completely locally — no data leaves your machine
+- Customizable via config file
+- CLI-first experience with great error messages
 
 ## What it won't do
 
-- Touch your private repos (unless you auth and explicitly want that)
+- Access private repos (unless you explicitly provide a token)
 - Push anything to GitHub for you
-- Send your data anywhere—everything runs locally
+- Collect telemetry or send data anywhere
 
 ## Privacy
 
-Everything runs on your machine. No telemetry, no analytics, nothing phoning home.
+Everything runs **locally** on your machine.  
+No tracking, no analytics, no phoning home.
 
-If you use a GitHub token, it's only used to hit GitHub's API and nothing else. It's never saved or sent anywhere.
+Your GitHub token (if provided) is only used to call GitHub's API — never stored or transmitted.
 
-## Install
+## Installation
 
 ```bash
+# Clone the repo
 git clone https://github.com/Xclusive09/gh-profile.git
 cd gh-profile
+
+# Install dependencies
 pnpm install
+
+# Build the CLI
 pnpm build
 
-# make it available globally
-pnpm setup              # first time only, then restart terminal
+# Link globally (run once)
 pnpm link --global
+
+# Optional: run setup script (first time only)
+pnpm setup
+# then restart your terminal          # first time only, then restart terminal
 ```
 
 ## Usage
@@ -48,6 +59,13 @@ pnpm link --global
 ```bash
 # generate README for a GitHub user
 gh-profile generate <username>
+
+# Specific template
+gh-profile generate <username> --template showcase
+gh-profile generate <username> --template stats-heavy
+
+# Force overwrite existing file
+gh-profile generate <username> --force
 
 # save to a specific file
 gh-profile generate <username> --output ./profile-readme.md
@@ -62,6 +80,8 @@ gh-profile generate <username>
 # force overwrite existing file
 gh-profile generate <username> --force
 ```
+
+
 
 ### Options
 
