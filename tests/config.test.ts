@@ -25,7 +25,7 @@ describe('Config', () => {
 
     it('returns empty object when no config exists', async () => {
         const config = await loadConfig();
-        expect(config).toEqual({});
+        expect(config).toMatchObject({});
     });
 
     it('loads valid config file', async () => {

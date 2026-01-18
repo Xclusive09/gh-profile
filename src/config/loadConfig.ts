@@ -17,20 +17,36 @@ export async function loadConfig(options: LoadConfigOptions = {}): Promise<Confi
         const configContent = await readFile(resolvedPath, 'utf-8');
         const config = JSON.parse(configContent);
 
-        // Validate config structure
         if (typeof config !== 'object' || config === null) {
             throw new Error('Config must be an object');
         }
 
-        // Only allow known properties
-        const allowedKeys = ['template', 'output', 'token', 'force'];
-        const invalidKeys = Object.keys(config).filter(key => !allowedKeys.includes(key));
+        // Allowed top-level keys (matches README)
+        const allowedTopLevel = ['template', 'output', 'token', 'force', 'github', 'customize'];
+        const invalidTop = Object.keys(config).filter(k => !allowedTopLevel.includes(k));
 
-        if (invalidKeys.length > 0) {
-            throw new Error(`Invalid config properties: ${invalidKeys.join(', ')}`);
+        if (invalidTop.length > 0) {
+            throw new Error(`Invalid config properties: ${invalidTop.join(', ')}`);
         }
 
-        return config;
+        // Optional: validate nested objects
+        if (config.github && typeof config.github === 'object') {
+            const allowedGithub = ['includePrivate', 'excludeRepos', 'pinnedRepos'];
+            const invalid = Object.keys(config.github).filter(k => !allowedGithub.includes(k));
+            if (invalid.length) {
+                throw new Error(`Invalid github properties: ${invalid.join(', ')}`);
+            }
+        }
+
+        if (config.customize && typeof config.customize === 'object') {
+            const allowedCustomize = ['showLanguages', 'showStats', 'showSocial', 'sections'];
+            const invalid = Object.keys(config.customize).filter(k => !allowedCustomize.includes(k));
+            if (invalid.length) {
+                throw new Error(`Invalid customize properties: ${invalid.join(', ')}`);
+            }
+        }
+
+        return config as Config;
     } catch (error) {
         if (error instanceof Error) {
             throw new Error(`Failed to load config: ${error.message}`);

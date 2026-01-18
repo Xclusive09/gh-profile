@@ -1,6 +1,7 @@
+
 {
   "name": "gh-profile",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "CLI tool to generate GitHub profile READMEs",
   "type": "module",
   "main": "dist/index.js",
