@@ -84,6 +84,10 @@ export class Logger {
 
         console.log(chalk.gray('└' + border + '┘'));
     }
+    dim(message: string): void {
+        console.log(chalk.dim(message));
+    }
+
 }
 
 export const logger = new Logger();
