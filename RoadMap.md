@@ -38,7 +38,7 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 
 ---
 
-## 🧩 Planned
+## 🚧 In Progress
 
 ### v0.3.0 (Template System)
 - Template registry (local templates)

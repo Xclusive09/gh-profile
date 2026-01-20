@@ -1,0 +1,8 @@
+{
+  "id": "custom-minimal",
+  "name": "Custom Minimal",
+  "description": "A custom minimal template",
+  "category": "minimal",
+  "version": "1.0.0",
+  "author": "Your Name"
+}

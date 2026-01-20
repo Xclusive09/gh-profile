@@ -1,4 +1,5 @@
 import type { NormalizedData } from '../core/normalize.js';
+
 /**
  * Metadata that describes a template
  */
@@ -15,6 +16,10 @@ export interface TemplateMetadata {
   version: string;
   /** Author of the template */
   author?: string;
+  /** Source of the template (built-in or local) */
+  source?: 'built-in' | 'local';
+  /** Path to the template if it's local */
+  path?: string;
 }
 
 /**
@@ -36,4 +41,12 @@ export interface Template {
 export interface TemplateRegistryEntry {
   template: Template;
   builtIn: boolean;
+}
+
+/**
+ * Local template file structure
+ */
+export interface LocalTemplateFiles {
+  metaPath: string;
+  indexPath: string;
 }
