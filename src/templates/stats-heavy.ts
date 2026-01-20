@@ -7,7 +7,7 @@ export const statsHeavyTemplate: Template = {
         name: 'Stats Dashboard',
         description: 'A data-rich template with comprehensive GitHub statistics',
         category: 'developer',
-        version: '0.1.0',
+        version: '0.3.0',
         author: 'gh-profile',
         source: 'built-in'
     },

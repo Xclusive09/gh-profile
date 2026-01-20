@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { program } from 'commander';
 import { generateCommand } from './commands/generate.js';
+import { createTemplatesCommand } from './commands/templates.js';
+import pkg from '../../package.json' with { type: 'json' };
 
-const program = new Command('gh-profile')
-    .description('Generate GitHub profile READMEs from your public activity')
-    .version('0.2.0');
+program
+    .name('gh-profile')
+    .description('GitHub Profile README Generator')
+    .version(pkg.version);
 
 program.addCommand(generateCommand);
+program.addCommand(createTemplatesCommand());
 
 program.parse();

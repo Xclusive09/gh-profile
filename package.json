@@ -1,7 +1,6 @@
-
 {
   "name": "gh-profile",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI tool to generate GitHub profile READMEs",
   "type": "module",
   "main": "dist/index.js",
@@ -29,6 +28,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@types/chalk": "^2.2.4",
     "@types/node": "^22.0.0",
     "eslint": "^9.39.0",
     "prettier": "^3.5.0",

@@ -66,8 +66,8 @@ describe('minimalTemplate', () => {
                 id: 'minimal',
                 name: 'Minimal',
                 description: 'A clean, minimal GitHub profile README template',
-                category: 'minimal',
-                version: '0.1.0',
+                category: 'generic',
+                version: '0.3.0',
                 author: 'gh-profile',
             });
         });
