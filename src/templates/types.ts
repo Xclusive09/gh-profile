@@ -1,6 +1,11 @@
 import type { NormalizedData } from '../core/normalize.js';
 
 /**
+ * Valid template categories
+ */
+export type TemplateCategory = 'developer' | 'designer' | 'founder' | 'generic';
+
+/**
  * Metadata that describes a template
  */
 export interface TemplateMetadata {
@@ -10,8 +15,8 @@ export interface TemplateMetadata {
   name: string;
   /** Description of the template's purpose */
   description: string;
-  /** Template category (e.g., 'minimal', 'showcase', 'stats-heavy') */
-  category: 'minimal' | 'showcase' | 'stats-heavy' | 'developer' | 'designer' | 'founder' | string;
+  /** Template category */
+  category: TemplateCategory;
   /** Version of the template */
   version: string;
   /** Author of the template */
