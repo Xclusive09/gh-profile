@@ -1,11 +1,39 @@
-import type { NormalizedData } from '../core/models.js';
-
-export interface Template {
+import type { NormalizedData } from '../core/normalize.js';
+/**
+ * Metadata that describes a template
+ */
+export interface TemplateMetadata {
+  /** Unique identifier for the template */
+  id: string;
+  /** Human-readable name */
   name: string;
-  render(data: NormalizedData): string;
+  /** Description of the template's purpose */
+  description: string;
+  /** Template category (e.g., 'minimal', 'showcase', 'stats-heavy') */
+  category: 'minimal' | 'showcase' | 'stats-heavy' | 'developer' | 'designer' | 'founder' | string;
+  /** Version of the template */
+  version: string;
+  /** Author of the template */
+  author?: string;
 }
 
-export interface TemplateSection {
-  id: string;
-  render(data: NormalizedData): string;
+/**
+ * A template function that generates markdown from GitHub data
+ */
+export type TemplateFunction = (data: NormalizedData) => string;
+
+/**
+ * A complete template with metadata and render function
+ */
+export interface Template {
+  metadata: TemplateMetadata;
+  render: TemplateFunction;
+}
+
+/**
+ * Template registry entry
+ */
+export interface TemplateRegistryEntry {
+  template: Template;
+  builtIn: boolean;
 }

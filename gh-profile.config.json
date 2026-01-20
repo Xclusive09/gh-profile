@@ -1,0 +1,15 @@
+{
+  "template": "showcase",
+  "output": "./profile/README.md",
+  "github": {
+    "includePrivate": false,
+    "excludeRepos": ["test-repo", "old-project"],
+    "pinnedRepos": ["awesome-project", "cool-lib"]
+  },
+  "customize": {
+    "showLanguages": true,
+    "showStats": true,
+    "showSocial": true,
+    "sections": ["intro", "projects", "skills", "stats"]
+  }
+}

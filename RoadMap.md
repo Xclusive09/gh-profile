@@ -27,7 +27,7 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 
 ---
 
-## 🚧 In Progress
+## ✅ Completed
 
 ### v0.2.0 (CLI Enhancements)
 - Multiple built-in templates (minimal, showcase, stats-heavy)

@@ -154,7 +154,7 @@ describe('aggregateLanguages', () => {
       { ...normalizeRepo(mockRepo), language: 'TypeScript', isFork: false },
       { ...normalizeRepo(mockRepo), language: 'TypeScript', isFork: false },
       { ...normalizeRepo(mockRepo), language: 'JavaScript', isFork: false },
-      { ...normalizeRepo(mockRepo), language: 'TypeScript', isFork: true }, // should be ignored
+      { ...normalizeRepo(mockRepo), language: 'TypeScript', isFork: true },
     ];
 
     const languages = aggregateLanguages(repos);
