@@ -80,6 +80,18 @@ gh-profile generate <username>
 # force overwrite existing file
 gh-profile generate <username> --force
 ```
+...
+
+## Custom Templates
+
+Want to create your own template? Check out our [Template Documentation](docs/templates.md) to learn how to:
+- Structure your template files
+- Define template metadata
+- Implement the render function
+- Access normalized GitHub data
+
+Our template system ensures consistent data access while giving you complete control over the output format.
+
 
 
 
