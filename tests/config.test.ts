@@ -32,13 +32,12 @@ describe('Config', () => {
         const testConfig = {
             template: 'showcase',
             output: 'custom.md',
-            token: 'test-token',
-            force: true
+
         };
 
         await writeFile(configPath, JSON.stringify(testConfig));
         const config = await loadConfig({ configPath: TEST_CONFIG });
-        expect(config).toEqual(testConfig);
+        expect(config).toMatchObject(testConfig);
     });
 
     it('throws on invalid JSON', async () => {

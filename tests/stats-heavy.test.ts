@@ -76,8 +76,8 @@ describe('statsHeavyTemplate', () => {
         it('has correct metadata', () => {
             expect(statsHeavyTemplate.metadata).toMatchObject({
                 id: 'stats-heavy',
-                name: 'Stats Heavy',
-                category: 'stats-heavy',
+                name: 'Stats Dashboard',
+                category: 'developer',
             });
         });
     });

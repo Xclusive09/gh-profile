@@ -4,14 +4,16 @@ import type { NormalizedData } from '../core/normalize.js';
 export const showcaseTemplate: Template = {
     metadata: {
         id: 'showcase',
-        name: 'Showcase',
-        description: 'Beautiful, modern layout highlighting your best work and personality',
-        category: 'showcase',
-        version: '1.1.0',
+        name: 'Project Showcase',
+        description: 'A template focused on highlighting your best projects',
+        category: 'developer',
+        version: '0.1.0',
         author: 'gh-profile',
+        source: 'built-in'
     },
 
-    render(data: NormalizedData): string {
+
+    render: (data: NormalizedData): string => {
         const { profile, stats } = data;
         const name = profile.name || profile.username;
 

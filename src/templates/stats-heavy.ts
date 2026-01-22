@@ -4,14 +4,16 @@ import type { NormalizedData, Repository } from '../core/models.js';
 export const statsHeavyTemplate: Template = {
     metadata: {
         id: 'stats-heavy',
-        name: 'Stats Heavy',
-        description: 'A data-focused template with comprehensive statistics',
-        category: 'stats-heavy',
-        version: '1.0.0',
+        name: 'Stats Dashboard',
+        description: 'A data-rich template with comprehensive GitHub statistics',
+        category: 'developer',
+        version: '0.3.0',
         author: 'gh-profile',
+        source: 'built-in'
     },
 
-    render(data: NormalizedData): string {
+
+    render: (data: NormalizedData): string => {
         const { profile, repos, stats } = data;
 
         let markdown = `# ${profile.name} | GitHub Statistics\n\n`;

@@ -73,8 +73,8 @@ describe('showcaseTemplate', () => {
         it('has correct metadata', () => {
             expect(showcaseTemplate.metadata).toMatchObject({
                 id: 'showcase',
-                name: 'Showcase',
-                category: 'showcase',
+                name: 'Project Showcase',
+                category: 'developer',
             });
         });
     });

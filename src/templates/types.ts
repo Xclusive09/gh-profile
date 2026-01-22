@@ -1,4 +1,10 @@
 import type { NormalizedData } from '../core/normalize.js';
+
+/**
+ * Valid template categories
+ */
+export type TemplateCategory = 'developer' | 'designer' | 'founder' | 'generic';
+
 /**
  * Metadata that describes a template
  */
@@ -9,12 +15,16 @@ export interface TemplateMetadata {
   name: string;
   /** Description of the template's purpose */
   description: string;
-  /** Template category (e.g., 'minimal', 'showcase', 'stats-heavy') */
-  category: 'minimal' | 'showcase' | 'stats-heavy' | 'developer' | 'designer' | 'founder' | string;
+  /** Template category */
+  category: TemplateCategory;
   /** Version of the template */
   version: string;
   /** Author of the template */
   author?: string;
+  /** Source of the template (built-in or local) */
+  source?: 'built-in' | 'local';
+  /** Path to the template if it's local */
+  path?: string;
 }
 
 /**
@@ -36,4 +46,12 @@ export interface Template {
 export interface TemplateRegistryEntry {
   template: Template;
   builtIn: boolean;
+}
+
+/**
+ * Local template file structure
+ */
+export interface LocalTemplateFiles {
+  metaPath: string;
+  indexPath: string;
 }

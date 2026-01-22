@@ -6,12 +6,12 @@ export const minimalTemplate: Template = {
         id: 'minimal',
         name: 'Minimal',
         description: 'A clean, minimal GitHub profile README template',
-        category: 'minimal',
-        version: '0.1.0',
+        category: 'generic',
+        version: '0.3.0',
         author: 'gh-profile',
+        source: 'built-in'
     },
-
-    render(data: NormalizedData): string {
+    render: (data: NormalizedData): string => {
         const { profile, repos } = data;
         const displayName = profile.name || profile.username;
 
