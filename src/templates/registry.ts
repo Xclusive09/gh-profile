@@ -1,4 +1,4 @@
-import type { Template, TemplateMetadata, TemplateCategory } from './types.js';
+import type { Template, TemplateCategory } from './types.js';
 
 export class TemplateRegistry {
     public templates: Template[] = [];

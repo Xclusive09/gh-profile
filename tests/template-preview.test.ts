@@ -187,7 +187,7 @@ describe('Template Preview System', () => {
                     category: 'generic' as TemplateCategory,                    version: '1.0.0'
                 },
                 render: () => {
-                    return { invalid: 'output' } as any;
+                    return { invalid: 'output' } as never;
                 }
             };
 
