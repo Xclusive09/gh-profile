@@ -4,6 +4,7 @@ import { normalize } from '../../core/normalize.js';
 import { getTemplate, templateRegistry } from '../../templates/index.js';
 import { writeOutput } from '../../output/writer.js';
 import { loadConfig } from '../../config/loadConfig.js';
+import { pluginRegistry } from '../../plugins/registry.js';
 import { logger, ExitCode } from '../../cli/logger.js';
 
 export interface GenerateOptions {
@@ -68,11 +69,18 @@ export const generateCommand = new Command('generate')
         // 2. Load & merge configuration
         logger.step('Loading configuration');
         const config = await loadConfig();
+
         const options = {
           ...config,
           ...cliOptions,
           output: cliOptions.output ?? config.output ?? './README.md',
         };
+
+        // ── NEW ── Initialize plugins with the loaded config
+        logger.step('Initializing plugins');
+        await pluginRegistry.initialize({}, config);
+        const enabledCount = pluginRegistry.getEnabledPlugins().length;
+        logger.info(`Initialized ${enabledCount} plugin${enabledCount === 1 ? '' : 's'}`);
 
         // 3. Validate template
         const templateId = options.template ?? DEFAULT_TEMPLATE_ID;
@@ -88,7 +96,7 @@ export const generateCommand = new Command('generate')
         }
         const client = new GitHubClient({ token });
 
-        // 5. Fetch → Process → Generate → Write (with beautiful progress)
+        // 5. Fetch → Process → Generate → Write
         logger.start(`Fetching data for @${username}`);
         const raw = await client.fetchAll(username);
         logger.stop();
@@ -96,10 +104,17 @@ export const generateCommand = new Command('generate')
         logger.start('Normalizing data');
         const data = normalize(raw);
         logger.stop();
-
         logger.start(`Generating with template: ${templateId}`);
         const template = getTemplate(templateId)!;
-        const content = template.render(data);
+        let content = template.render(data);
+
+        // Example: let plugins modify content if they have a render hook
+        for (const plugin of pluginRegistry.getEnabledPlugins()) {
+          if (plugin.render) {
+            content = await plugin.render(content, data) || content;
+          }
+        }
+
         logger.stop();
 
         logger.start(`Writing to ${options.output}`);
@@ -118,6 +133,7 @@ export const generateCommand = new Command('generate')
           `Template:    ${templateId}`,
           `Output:      ${writeResult.path}`,
           writeResult.overwritten ? 'Status:      Overwritten existing file' : 'Status:      New file created',
+          `Plugins:     ${enabledCount} active`,
         ].join('\n'));
 
         logger.newline();

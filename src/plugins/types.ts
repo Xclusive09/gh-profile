@@ -78,7 +78,7 @@ export interface Plugin {
      * Called during the render phase
      * Can modify or transform the markdown content
      */
-    render?(context: PluginContext): RenderHookResult;
+    render?(content: string, data: NormalizedData): RenderHookResult;
 
     /**
      * Called after rendering is complete

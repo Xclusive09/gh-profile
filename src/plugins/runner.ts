@@ -51,7 +51,7 @@ export class PluginRunner {
                         config: {},
                     };
 
-                    const result = await plugin.render(context);
+                    const result = await plugin.render(content, data);
                     if (result) {
                         currentContent = result;
                     }
