@@ -117,7 +117,7 @@ export class PluginRegistry {
         if (!this.validateMetadata(p.metadata)) return false;
 
         for (const hook of this.supportedHooks) {
-            const fn = (p as any)[hook];
+            const fn = (p as unknown as never)[hook];
             if (fn !== undefined && typeof fn !== 'function') {
                 logger.warn(`Plugin '${p.metadata.id}': '${hook}' must be a function`);
                 return false;
