@@ -42,11 +42,13 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 
 ### v0.3.0 (Template System)
 - Template registry (local templates)
-- Template categories (developer, designer, founder, etc.)
+- Template cate`gories (developer, designer, founder, etc.)
 - CLI preview for templates
 - Documentation for creating custom templates
 
 ---
+
+## 🚧 In Progress
 
 ### v0.4.0 (Plugin Architecture)
 - Plugin-based sections (projects, stats, socials, highlights)

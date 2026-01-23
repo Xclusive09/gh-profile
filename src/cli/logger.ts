@@ -88,6 +88,14 @@ export class Logger {
         console.log(chalk.dim(message));
     }
 
+    debug(message: string): void {
+        if (process.env.DEBUG) {
+            this.spinner.stop();
+            console.log(chalk.gray('🔍'), chalk.dim(message));
+        }
+    }
+
+
 }
 
 export const logger = new Logger();

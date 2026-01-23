@@ -18,44 +18,59 @@ const DEFAULT_CONFIG: Config = {
         showStats: true,
         showSocial: true,
         sections: ['intro', 'projects', 'skills', 'stats']
-    }
+    },
+    // Default: empty object → all plugins enabled (fallback behavior)
+    plugins: {}
 };
 
 export async function loadConfig(options: LoadConfigOptions = {}): Promise<Config> {
     const configPath = options.configPath || DEFAULT_CONFIG_NAME;
     const resolvedPath = resolve(process.cwd(), configPath);
 
+    // No config file → return full defaults
     if (!existsSync(resolvedPath)) {
         return DEFAULT_CONFIG;
     }
 
     try {
         const configContent = await readFile(resolvedPath, 'utf-8');
-        const config = JSON.parse(configContent);
+        const parsed = JSON.parse(configContent);
 
-        if (typeof config !== 'object' || config === null) {
+        if (typeof parsed !== 'object' || parsed === null) {
             throw new Error('Config must be an object');
         }
 
-        // Allowed top-level keys
-        const allowedTopLevel = ['template', 'output', 'templatesPath', 'github', 'customize'];
-        const invalidTop = Object.keys(config).filter(k => !allowedTopLevel.includes(k));
+        // Enforce allowed top-level keys
+        const allowedTopLevel = [
+            'template',
+            'output',
+            'templatesPath',
+            'github',
+            'customize',
+            'plugins'
+        ];
 
-        if (invalidTop.length > 0) {
-            throw new Error(`Invalid config properties: ${invalidTop.join(', ')}`);
+        const invalidKeys = Object.keys(parsed).filter(key => !allowedTopLevel.includes(key));
+
+        if (invalidKeys.length > 0) {
+            throw new Error(`Invalid config properties: ${invalidKeys.join(', ')}`);
         }
 
-        // Validate and merge with defaults
+        // Deep merge with defaults
         return {
             ...DEFAULT_CONFIG,
-            ...config,
+            ...parsed,
             github: {
                 ...DEFAULT_CONFIG.github,
-                ...(config.github || {})
+                ...(parsed.github ?? {})
             },
             customize: {
                 ...DEFAULT_CONFIG.customize,
-                ...(config.customize || {})
+                ...(parsed.customize ?? {})
+            },
+            plugins: {
+                ...DEFAULT_CONFIG.plugins,
+                ...(parsed.plugins ?? {})
             }
         };
     } catch (error) {
