@@ -4,6 +4,8 @@ import type { NormalizedData } from '../core/normalize.js';
 /**
  * Plugin metadata interface
  */
+export type { NormalizedData } from '../core/normalize.js';
+
 export interface PluginMetadata {
     /** Unique identifier for the plugin */
     id: string;
@@ -84,7 +86,7 @@ export interface Plugin {
      * Called after rendering is complete
      * Use this for cleanup or final content modifications
      */
-    afterRender?(context: PluginContext): HookResult;
+    afterRender?(content: string, data: NormalizedData): RenderHookResult;
 }
 
 /**

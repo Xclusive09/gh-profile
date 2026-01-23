@@ -1,7 +1,7 @@
 
 import { logger } from '../cli/logger.js';
 import { pluginRegistry } from './registry.js';
-import type { Plugin, PluginContext, PluginError } from './types.js';
+import type { Plugin, PluginContext } from './types.js';
 import type { NormalizedData } from '../core/normalize.js';
 
 /**
@@ -45,25 +45,22 @@ export class PluginRunner {
         for (const plugin of plugins) {
             if (plugin.render) {
                 try {
-                    const context: PluginContext = {
-                        data,
-                        content: currentContent,
-                        config: {},
-                    };
+                    // Pass the UPDATED currentContent, not the original
+                    const result = await plugin.render(currentContent, data);
 
-                    const result = await plugin.render(content, data);
-                    if (result) {
+                    // Only update if result is a valid string
+                    if (typeof result === 'string') {
                         currentContent = result;
                     }
                 } catch (error) {
                     this.handleError(error, plugin, 'render');
+                    // continue with previous content – don't break the chain
                 }
             }
         }
 
         return currentContent;
     }
-
     /**
      * Run afterRender hooks for all enabled plugins
      */
@@ -74,14 +71,10 @@ export class PluginRunner {
         for (const plugin of plugins) {
             if (plugin.afterRender) {
                 try {
-                    const context: PluginContext = {
-                        data,
-                        content: currentContent,
-                        config: {},
-                    };
-
-                    await plugin.afterRender(context);
-                    currentContent = context.content;
+                    const result = await plugin.afterRender(currentContent, data);
+                    if (typeof result === 'string') {
+                        currentContent = result;
+                    }
                 } catch (error) {
                     this.handleError(error, plugin, 'afterRender');
                 }
