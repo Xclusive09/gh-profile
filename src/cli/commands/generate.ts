@@ -12,6 +12,8 @@ export interface GenerateOptions {
   output: string;
   token?: string;
   force?: boolean;
+  'enable-plugin'?: string[];     // new
+  'disable-plugin'?: string[];    // new
 }
 
 const DEFAULT_TEMPLATE_ID = 'minimal';
@@ -23,26 +25,21 @@ function getRichHelpText(): string {
 Description:
   Create beautiful, professional GitHub profile READMEs from public activity.
 
-Commands:
-  generate <username>     Generate README for the specified GitHub user
-
 Options (generate):
-  -t, --template <name>   Template to use (default: minimal)
-  -o, --output <path>     Output file (default: ./README.md)
-  --token <token>         GitHub personal access token
-  -f, --force             Overwrite without confirmation
+  -t, --template <name>          Template to use (default: minimal)
+  -o, --output <path>            Output file (default: ./README.md)
+  --token <token>                GitHub personal access token
+  -f, --force                    Overwrite without prompting
+  --enable-plugin <name>         Force-enable a plugin (overrides config)
+  --disable-plugin <name>        Force-disable a plugin (overrides config)
 
 Available Templates:
 ${templates.map(t => `  • ${t.id.padEnd(14)}${t.description}`).join('\n')}
 
 Examples:
   gh-profile generate xclusive
-  gh-profile generate xclusive -t stats-heavy -o profile.md --force
-  gh-profile generate xclusive --token ghp_xxx
-
-Tip:
-  For better rate limits, create a token at:
-  https://github.com/settings/tokens (classic • public_repo scope)
+  gh-profile generate xclusive --enable-plugin stats --disable-plugin socials
+  gh-profile generate xclusive -t stats-heavy --force
   `;
 }
 
@@ -53,20 +50,23 @@ export const generateCommand = new Command('generate')
     .option('-o, --output <path>', 'output file path', './README.md')
     .option('--token <token>', 'GitHub personal access token')
     .option('-f, --force', 'overwrite without prompting', false)
+    // ── NEW repeatable flags ──
+    .option('--enable-plugin <name>', 'force-enable plugin (overrides config)', collectOption, [])
+    .option('--disable-plugin <name>', 'force-disable plugin (overrides config)', collectOption, [])
     .addHelpText('after', getRichHelpText())
     .action(async (username: string, cliOptions: GenerateOptions) => {
       try {
         logger.header('gh-profile • Generate README');
 
-        // 1. Validate input early
+        // 1. Validate input
         if (!username?.trim()) {
-          logger.error('Username is required.\nUsage: gh-profile generate <username>', ExitCode.InvalidArguments);
+          logger.error('Username is required.', ExitCode.InvalidArguments);
         }
         if (!/^[a-zA-Z0-9-]+$/.test(username)) {
           logger.error('Invalid username format', ExitCode.ValidationError);
         }
 
-        // 2. Load & merge configuration
+        // 2. Load config
         logger.step('Loading configuration');
         const config = await loadConfig();
 
@@ -76,27 +76,54 @@ export const generateCommand = new Command('generate')
           output: cliOptions.output ?? config.output ?? './README.md',
         };
 
-        // ── NEW ── Initialize plugins with the loaded config
+        // 3. Initialize plugins from config first
         logger.step('Initializing plugins');
         await pluginRegistry.initialize({}, config);
-        const enabledCount = pluginRegistry.getEnabledPlugins().length;
-        logger.info(`Initialized ${enabledCount} plugin${enabledCount === 1 ? '' : 's'}`);
 
-        // 3. Validate template
+        // 4. Apply CLI overrides (highest precedence)
+        let cliOverridesApplied = false;
+
+        if (cliOptions['enable-plugin']?.length) {
+          for (const id of cliOptions['enable-plugin']) {
+            if (pluginRegistry.getPlugin(id)) {
+              pluginRegistry.enablePlugin(id);
+              logger.info(`CLI override: enabled plugin '${id}'`);
+              cliOverridesApplied = true;
+            } else {
+              logger.warn(`CLI --enable-plugin: unknown plugin '${id}' (ignored)`);
+            }
+          }
+        }
+
+        if (cliOptions['disable-plugin']?.length) {
+          for (const id of cliOptions['disable-plugin']) {
+            if (pluginRegistry.getPlugin(id)) {
+              pluginRegistry.disablePlugin(id);
+              logger.info(`CLI override: disabled plugin '${id}'`);
+              cliOverridesApplied = true;
+            } else {
+              logger.warn(`CLI --disable-plugin: unknown plugin '${id}' (ignored)`);
+            }
+          }
+        }
+
+        const finalEnabledCount = pluginRegistry.getEnabledPlugins().length;
+        logger.info(`Final active plugins: ${finalEnabledCount}`);
+
+        // 5. Validate template
         const templateId = options.template ?? DEFAULT_TEMPLATE_ID;
         if (!templateRegistry.has(templateId)) {
           const available = templateRegistry.listMetadata().map(m => m.id).join(', ');
           logger.error(`Unknown template: ${templateId}\nAvailable: ${available}`, ExitCode.ValidationError);
         }
 
-        // 4. Initialize client
+        // 6. Proceed with generation...
         const token = options.token || process.env.GITHUB_TOKEN;
         if (!token) {
           logger.warn('No GitHub token provided → rate limit may be low');
         }
         const client = new GitHubClient({ token });
 
-        // 5. Fetch → Process → Generate → Write
         logger.start(`Fetching data for @${username}`);
         const raw = await client.fetchAll(username);
         logger.stop();
@@ -104,11 +131,11 @@ export const generateCommand = new Command('generate')
         logger.start('Normalizing data');
         const data = normalize(raw);
         logger.stop();
+
         logger.start(`Generating with template: ${templateId}`);
         const template = getTemplate(templateId)!;
         let content = template.render(data);
 
-        // Example: let plugins modify content if they have a render hook
         for (const plugin of pluginRegistry.getEnabledPlugins()) {
           if (plugin.render) {
             content = await plugin.render(content, data) || content;
@@ -123,18 +150,24 @@ export const generateCommand = new Command('generate')
         });
         logger.stop();
 
-        // 6. Beautiful success screen
+        // 7. Summary with plugin info
         logger.newline(2);
         logger.success(`README generated successfully!`);
         logger.newline();
 
-        logger.box('Summary', [
+        const summaryLines = [
           `User:        @${username}`,
           `Template:    ${templateId}`,
           `Output:      ${writeResult.path}`,
-          writeResult.overwritten ? 'Status:      Overwritten existing file' : 'Status:      New file created',
-          `Plugins:     ${enabledCount} active`,
-        ].join('\n'));
+          writeResult.overwritten ? 'Status:      Overwritten' : 'Status:      New file',
+          `Plugins:     ${finalEnabledCount} active`,
+        ];
+
+        if (cliOverridesApplied) {
+          summaryLines.push('CLI overrides: applied');
+        }
+
+        logger.box('Summary', summaryLines.join('\n'));
 
         logger.newline();
         logger.header('Statistics');
@@ -149,3 +182,8 @@ export const generateCommand = new Command('generate')
         logger.error(message, ExitCode.GeneralError);
       }
     });
+
+// Helper to collect repeatable options
+function collectOption(value: string, previous: string[] = []) {
+  return previous.concat([value]);
+}

@@ -8,7 +8,7 @@ import { createPreviewCommand } from './commands/preview.js';
 
 program
     .name('gh-profile')
-    .description('GitHub Profile README Generator')
+    .description('GitHub Profile README Generator\nUse --enable-plugin / --disable-plugin to override plugin settings.')
     .version(pkg.version);
 
 program.addCommand(generateCommand);
