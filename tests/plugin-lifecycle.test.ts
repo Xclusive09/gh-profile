@@ -3,7 +3,7 @@ import { pluginRegistry } from '../src/plugins/registry.js';
 import { pluginRunner } from '../src/plugins/runner.js';
 import type { Plugin, NormalizedData } from '../src/plugins/types.js';
 
-// Minimal realistic mock that should satisfy most NormalizedData shapes
+// Minimally realistically mock that should satisfy most NormalizedData shapes
 const mockData: NormalizedData = {
     profile: {
         username: 'Test User',
