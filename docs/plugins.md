@@ -29,7 +29,7 @@ interface Plugin {
   init?(options: PluginOptions): Promise<void> | void;
   beforeRender?(context: PluginContext): Promise<void> | void;
   render?(content: string, data: NormalizedData): Promise<string> | string;
-  afterRender?(context: PluginContext): Promise<void> | void;
+  afterRender?(content: string, data: NormalizedData): Promise<string> | string;
 }
 ```
 
@@ -117,8 +117,8 @@ Core data structure containing:
 ## Minimal Working Example
 
 ```ts
-import type { Plugin } from '../types.js';
-import type { NormalizedData } from '../core/normalize.js';
+import type { Plugin } from '../src/plugins/types.js';
+import type { NormalizedData } from '../src/core/normalize.js';
 
 export const minimalPlugin: Plugin = {
   metadata: {
@@ -128,7 +128,6 @@ export const minimalPlugin: Plugin = {
     version: '1.0.0',
     author: 'Your Name',
   },
-
   render: async (content: string, data: NormalizedData): Promise<string> => {
     const greeting = `\n## Hello ${data.profile.name}!\n\n`;
     return content + greeting;
@@ -172,7 +171,7 @@ const mockData: NormalizedData = {
 2. **Test plugin output**:
 
 ```ts
-const result = await plugin.render('# Existing Content\n', mockData);
+const result = await minimalPlugin.render('# Existing Content\n', mockData);
 expect(result).toContain('Hello Test User');
 ```
 
