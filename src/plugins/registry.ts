@@ -1,16 +1,29 @@
 import { logger } from '../cli/logger.js';
-import type { Plugin, PluginMetadata, PluginOptions } from './types.js';
+import type { Plugin, PluginOptions, PluginHook, PluginRegistration } from './types.js';
 import type { Config } from '../config/types.js';
+import { isPlugin } from './types.js';
 
+/**
+ * Plugin Registry to manage plugins
+ */
 export class PluginRegistry {
-    private plugins = new Map<string, Plugin>();
-    private enabledPlugins = new Set<string>();
+    private plugins = new Map<string, PluginRegistration>();
     private initialized = false;
+    private readonly supportedHooks: PluginHook[] = ['init', 'beforeRender', 'render', 'afterRender'];
 
-    private readonly supportedHooks = ['init', 'beforeRender', 'render', 'afterRender'] as const;
+    constructor() {
+        // Initialize with core metadata
+        logger.debug('PluginRegistry initialized');
+    }
 
-    register(plugin: Plugin): void {
-        if (!this.validatePlugin(plugin)) return;
+    /**
+     * Register a plugin with options
+     */
+    register(plugin: Plugin, options: PluginOptions = {}): void {
+        if (!this.validatePlugin(plugin)) {
+            logger.warn(`Plugin validation failed for: ${(plugin as Plugin)?.metadata?.id || 'unknown'}`);
+            return;
+        }
 
         const { id } = plugin.metadata;
 
@@ -19,131 +32,281 @@ export class PluginRegistry {
             return;
         }
 
-        this.plugins.set(id, plugin);
-        this.enabledPlugins.add(id); // default: enabled
+        const registration: PluginRegistration = {
+            plugin,
+            options: {
+                enabled: options.enabled ?? true, // Default to enabled
+                config: options.config || {}
+            },
+            enabled: options.enabled ?? true
+        };
+
+        this.plugins.set(id, registration);
+        logger.debug(`Registered plugin: ${id} (${registration.enabled ? 'enabled' : 'disabled'})`);
     }
 
+    /**
+     * Initialize all enabled plugins
+     */
     async initialize(
-        options: Record<string, PluginOptions> = {},
+        pluginOptions: Record<string, PluginOptions> = {},
         config?: Config
     ): Promise<void> {
-        if (this.initialized) return;
-
-        // Apply config overrides
-        if (config?.plugins) {
-            for (const [pluginId, shouldEnable] of Object.entries(config.plugins)) {
-                if (typeof shouldEnable !== 'boolean') {
-                    logger.warn(`Invalid config value for plugin '${pluginId}': expected boolean`);
-                    continue;
-                }
-
-                if (!this.plugins.has(pluginId)) {
-                    logger.warn(`Config references unknown plugin '${pluginId}' — ignoring`);
-                    continue;
-                }
-
-                if (shouldEnable === false) {
-                    this.disablePlugin(pluginId);
-                    logger.info(`Plugin '${pluginId}' disabled via config`);
-                } else {
-                    this.enablePlugin(pluginId);
-                }
-            }
+        if (this.initialized) {
+            logger.debug('PluginRegistry already initialized');
+            return;
         }
 
+        logger.info('Initializing plugins...');
+
+        // Apply configuration overrides first
+        this.applyConfigOverrides(config);
+
+        // Apply runtime options
+        this.applyPluginOptions(pluginOptions);
+
         // Initialize enabled plugins
-        for (const [id, plugin] of this.plugins) {
-            if (!this.isEnabled(id)) {
+        const initPromises: Promise<void>[] = [];
+
+        for (const [id, registration] of this.plugins) {
+            if (!registration.enabled) {
                 logger.debug(`Skipping disabled plugin: ${id}`);
                 continue;
             }
 
-            try {
-                if (plugin.init) {
-                    await plugin.init(options[id] || {});
-                    logger.debug(`Plugin '${id}' initialized`);
-                }
-            } catch (error) {
-                logger.warn(
-                    `Plugin '${id}' init failed: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`
-                );
-                this.disablePlugin(id);
-            }
+            initPromises.push(
+                this.initializePlugin(id, registration).catch(error => {
+                    logger.warn(`Plugin '${id}' initialization failed, disabling: ${error instanceof Error ? error.message : String(error)}`);
+                    registration.enabled = false;
+                })
+            );
         }
 
+        await Promise.allSettled(initPromises);
         this.initialized = true;
+
+        const enabledCount = this.getEnabledPlugins().length;
+        logger.info(`Plugin system initialized. ${enabledCount} plugin(s) enabled.`);
     }
 
-    // ── Optional helper for tests/debug ──
+    /**
+     * Get plugin by ID
+     */
+    getPlugin(id: string): Plugin | undefined {
+        return this.plugins.get(id)?.plugin;
+    }
+
+    /**
+     * Get all registered plugins
+     */
+    getAllPlugins(): Plugin[] {
+        return Array.from(this.plugins.values()).map(r => r.plugin);
+    }
+
+    /**
+     * Get enabled plugins
+     */
+    getEnabledPlugins(): Plugin[] {
+        return Array.from(this.plugins.values())
+            .filter(r => r.enabled)
+            .map(r => r.plugin);
+    }
+
+    /**
+     * Get enabled plugins that implement a specific hook
+     */
+    getPluginsWithHook(hook: PluginHook): Plugin[] {
+        return this.getEnabledPlugins().filter(plugin =>
+            typeof ((plugin as unknown) as Record<string, unknown>)[hook] === 'function'
+        );
+    }
+
+    /**
+     * Enable a plugin
+     */
+    enablePlugin(id: string): void {
+        const registration = this.plugins.get(id);
+        if (registration) {
+            registration.enabled = true;
+            registration.options.enabled = true;
+            logger.debug(`Enabled plugin: ${id}`);
+        }
+    }
+
+    /**
+     * Disable a plugin
+     */
+    disablePlugin(id: string): void {
+        const registration = this.plugins.get(id);
+        if (registration) {
+            registration.enabled = false;
+            registration.options.enabled = false;
+            logger.debug(`Disabled plugin: ${id}`);
+        }
+    }
+
+    /**
+     * Check if a plugin is enabled
+     */
+    isEnabled(id: string): boolean {
+        return this.plugins.get(id)?.enabled ?? false;
+    }
+
+    /**
+     * Check if plugin system is initialized
+     */
+    isInitialized(): boolean {
+        return this.initialized;
+    }
+
+    /**
+     * Reset registry (for testing)
+     */
     reset(): void {
         this.plugins.clear();
-        this.enabledPlugins.clear();
         this.initialized = false;
+        logger.debug('PluginRegistry reset');
     }
 
-    getPlugin(id: string): Plugin | undefined {
-        return this.plugins.get(id);
+    /**
+     * Execute a specific hook on all enabled plugins
+     */
+    async executeHook<T extends PluginHook>(
+        hook: T,
+        ...args: Parameters<NonNullable<Plugin[T]>>
+    ): Promise<void> {
+        if (!this.initialized) {
+            throw new Error('PluginRegistry not initialized');
+        }
+
+        const plugins = this.getPluginsWithHook(hook);
+
+        if (plugins.length === 0) {
+            return;
+        }
+
+        logger.debug(`Executing '${hook}' hook on ${plugins.length} plugin(s)`);
+
+        const executions = plugins.map(async (plugin) => {
+            try {
+                const hookFn = ((plugin as unknown) as Record<string, unknown>)[hook] as ((...args: unknown[]) => unknown);
+                await hookFn(...args);
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.warn(`Plugin '${plugin.metadata.id}' failed during '${hook}' hook: ${errorMessage}`);
+
+                // Don't disable plugin for runtime hook failures, just log
+                if (hook === 'init') {
+                    this.disablePlugin(plugin.metadata.id);
+                }
+            }
+        });
+
+        await Promise.allSettled(executions);
     }
 
-    getAllPlugins(): Plugin[] {
-        return Array.from(this.plugins.values());
+    private async initializePlugin(id: string, registration: PluginRegistration): Promise<void> {
+        const { plugin, options } = registration;
+
+        if (!plugin.init) {
+            return; // No init hook
+        }
+
+        try {
+            await plugin.init(options);
+            logger.debug(`Plugin '${id}' initialized successfully`);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logger.error(`Plugin '${id}' initialization failed:` + ` ${errorMessage}`);
+            throw error;
+        }
     }
 
-    getEnabledPlugins(): Plugin[] {
-        return Array.from(this.plugins.values()).filter(p => this.isEnabled(p.metadata.id));
+    private applyConfigOverrides(config?: Config): void {
+        if (!config?.plugins) {
+            return;
+        }
+
+        for (const [pluginId, configValue] of Object.entries(config.plugins)) {
+            const registration = this.plugins.get(pluginId);
+
+            if (!registration) {
+                logger.debug(`Config references unknown plugin '${pluginId}' - ignoring`);
+                continue;
+            }
+
+            if (typeof configValue === 'boolean') {
+                registration.enabled = configValue;
+                registration.options.enabled = configValue;
+                logger.debug(`Plugin '${pluginId}' ${configValue ? 'enabled' : 'disabled'} via config`);
+            } else if (
+                typeof configValue === 'object' &&
+                configValue !== null &&
+                !Array.isArray(configValue) &&
+                Object.prototype.toString.call(configValue) === '[object Object]'
+            ) {
+                registration.options.config = Object.assign(
+                    {},
+                    registration.options.config,
+                    configValue
+                );
+                logger.debug(`Plugin '${pluginId}' config updated via config`);
+            }
+        }
     }
 
-    enablePlugin(id: string): void {
-        if (this.plugins.has(id)) this.enabledPlugins.add(id);
-    }
+    private applyPluginOptions(pluginOptions: Record<string, PluginOptions>): void {
+        for (const [pluginId, options] of Object.entries(pluginOptions)) {
+            const registration = this.plugins.get(pluginId);
 
-    disablePlugin(id: string): void {
-        this.enabledPlugins.delete(id);
-    }
+            if (!registration) {
+                logger.debug(`Options provided for unknown plugin '${pluginId}' - ignoring`);
+                continue;
+            }
 
-    isEnabled(id: string): boolean {
-        return this.enabledPlugins.has(id);
+            // Merge options
+            registration.options = {
+                ...registration.options,
+                ...options,
+                config: {
+                    ...registration.options.config,
+                    ...options.config
+                }
+            };
+
+            // Update enabled state if specified
+            if (typeof options.enabled === 'boolean') {
+                registration.enabled = options.enabled;
+            }
+        }
     }
 
     private validatePlugin(plugin: unknown): plugin is Plugin {
-        if (!plugin || typeof plugin !== 'object') {
-            logger.warn('Invalid plugin: not an object');
+        // Use the type guard from types.ts
+        if (!isPlugin(plugin)) {
             return false;
         }
 
-        const p = plugin as Plugin;
-        if (!this.validateMetadata(p.metadata)) return false;
+        // Additional runtime validation
+        const { id } = plugin.metadata;
 
+        // Check for duplicate IDs
+        if (this.plugins.has(id)) {
+            logger.warn(`Duplicate plugin ID detected: ${id}`);
+            return false;
+        }
+
+        // Validate hook signatures
         for (const hook of this.supportedHooks) {
-            const fn = (p as unknown as never)[hook];
-            if (fn !== undefined && typeof fn !== 'function') {
-                logger.warn(`Plugin '${p.metadata.id}': '${hook}' must be a function`);
+            const hookFn = ((plugin as unknown) as Record<string, unknown>)[hook];            if (hookFn !== undefined && typeof hookFn !== 'function') {
+                logger.warn(`Plugin '${id}': '${hook}' must be a function`);
                 return false;
             }
         }
 
         return true;
     }
-
-    private validateMetadata(metadata: unknown): metadata is PluginMetadata {
-        if (!metadata || typeof metadata !== 'object') {
-            logger.warn('Invalid plugin metadata');
-            return false;
-        }
-
-        const m = metadata as PluginMetadata;
-        const required: (keyof PluginMetadata)[] = ['id', 'name', 'description', 'version', 'author'];
-        const missing = required.filter(key => !(key in m));
-
-        if (missing.length > 0) {
-            logger.warn(`Plugin metadata missing: ${missing.join(', ')}`);
-            return false;
-        }
-
-        return true;
-    }
 }
 
+// Singleton instance
 export const pluginRegistry = new PluginRegistry();
