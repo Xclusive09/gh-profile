@@ -77,10 +77,11 @@ export const generateCommand = new Command('generate')
         };
 
         // 3. Initialize plugins from config first
+        //    CLI overrides will be applied after this step
         logger.step('Initializing plugins');
         await pluginRegistry.initialize({}, config);
 
-        // 4. Apply CLI overrides (highest precedence)
+        // 4. Apply CLI overrides (highest precedence: CLI > config > defaults)
         let cliOverridesApplied = false;
 
         if (cliOptions['enable-plugin']?.length) {

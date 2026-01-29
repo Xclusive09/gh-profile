@@ -1,19 +1,23 @@
-
 import { describe, test, expect, beforeEach } from 'vitest';
 import { PluginRegistry } from '../src/plugins/registry.js';
 import type { Plugin, PluginMetadata } from '../src/plugins/types.js';
+
+// Helper to create valid plugin metadata
+const validMetadata = (id: string): PluginMetadata => ({
+    id,
+    name: `Test Plugin ${id}`,
+    description: 'Test plugin',
+    version: '1.0.0',
+    author: 'Test Author',
+    // homepage is optional
+});
 
 describe('PluginRegistry', () => {
     let registry: PluginRegistry;
 
     const createPlugin = (id: string, partial: Partial<Plugin> = {}): Plugin => ({
-        metadata: {
-            id,
-            name: `Test Plugin ${id}`,
-            description: 'Test plugin',
-            version: '1.0.0',
-            author: 'Test Author'
-        },
+        metadata: validMetadata(id),
+        render: (content: string) => content, // Always include a no-op render hook
         ...partial
     });
 

@@ -1,5 +1,7 @@
 # Plugin Development Guide
 
+> See the README for a minimal working example and how to enable/disable plugins via CLI or config.
+
 ## Overview
 
 `gh-profile` plugins are modular components that extend the README generation process. Each plugin can:

@@ -1,8 +1,8 @@
-
 import { logger } from '../cli/logger.js';
 import { templateRegistry } from '../templates/index.js';
 import { normalize } from './normalize.js';
 import { pluginRunner } from '../plugins/runner.js';
+import { pluginRegistry } from '../plugins/registry.js';
 import type { GitHubData } from '../github/types.js';
 
 export async function generate(
@@ -17,19 +17,24 @@ export async function generate(
     }
 
     try {
+        // Ensure plugins are initialized before running hooks
+        if (!pluginRegistry.isInitialized()) {
+            await pluginRegistry.initialize();
+        }
+
         // Normalize data
         let normalizedData = normalize(data);
 
-        // Run beforeRender plugins
+        // Run beforeRender plugins (deterministic order, isolated context)
         normalizedData = await pluginRunner.runBeforeRender(normalizedData);
 
         // Generate initial content
         let content = template.render(normalizedData);
 
-        // Run render plugins
+        // Run render plugins (deterministic order, isolated context)
         content = await pluginRunner.runRender(normalizedData, content);
 
-        // Run afterRender plugins
+        // Run afterRender plugins (deterministic order, isolated context)
         content = await pluginRunner.runAfterRender(normalizedData, content);
 
         return content;
