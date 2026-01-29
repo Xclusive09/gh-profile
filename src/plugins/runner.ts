@@ -1,17 +1,21 @@
-
 import { logger } from '../cli/logger.js';
 import { pluginRegistry } from './registry.js';
 import type { Plugin, PluginContext } from './types.js';
 import type { NormalizedData } from '../core/normalize.js';
 
 /**
- * Runs plugins in a specific lifecycle phase
+ * Runs plugins in a specific lifecycle phase in deterministic order.
+ * Each plugin receives its own context/data to prevent side effects.
+ * All hooks require pluginRegistry to be initialized first.
  */
 export class PluginRunner {
     /**
      * Run beforeRender hooks for all enabled plugins
      */
     async runBeforeRender(data: NormalizedData): Promise<NormalizedData> {
+        if (!pluginRegistry.isInitialized()) {
+            throw new Error('PluginRegistry must be initialized before running plugin hooks.');
+        }
         const plugins = pluginRegistry.getEnabledPlugins();
         let currentData = { ...data };
 
@@ -39,6 +43,9 @@ export class PluginRunner {
      * Run render hooks for all enabled plugins
      */
     async runRender(data: NormalizedData, content: string): Promise<string> {
+        if (!pluginRegistry.isInitialized()) {
+            throw new Error('PluginRegistry must be initialized before running plugin hooks.');
+        }
         const plugins = pluginRegistry.getEnabledPlugins();
         let currentContent = content;
 
@@ -65,6 +72,9 @@ export class PluginRunner {
      * Run afterRender hooks for all enabled plugins
      */
     async runAfterRender(data: NormalizedData, content: string): Promise<string> {
+        if (!pluginRegistry.isInitialized()) {
+            throw new Error('PluginRegistry must be initialized before running plugin hooks.');
+        }
         const plugins = pluginRegistry.getEnabledPlugins();
         let currentContent = content;
 
