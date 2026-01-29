@@ -223,7 +223,9 @@ export class PluginRegistry {
     }
 
     private applyConfigOverrides(config?: Config): void {
+        // If no plugins config, fallback: all plugins enabled by default
         if (!config?.plugins) {
+            logger.debug('No plugin config found; all plugins enabled by default.');
             return;
         }
 
@@ -239,18 +241,10 @@ export class PluginRegistry {
                 registration.enabled = configValue;
                 registration.options.enabled = configValue;
                 logger.debug(`Plugin '${pluginId}' ${configValue ? 'enabled' : 'disabled'} via config`);
-            } else if (
-                typeof configValue === 'object' &&
-                configValue !== null &&
-                !Array.isArray(configValue) &&
-                Object.prototype.toString.call(configValue) === '[object Object]'
-            ) {
-                registration.options.config = Object.assign(
-                    {},
-                    registration.options.config,
-                    configValue
-                );
-                logger.debug(`Plugin '${pluginId}' config updated via config`);
+            } else {
+                logger.warn(`Plugin config for '${pluginId}' should be true/false. Got: ${typeof configValue}. Defaulting to enabled.`);
+                registration.enabled = true;
+                registration.options.enabled = true;
             }
         }
     }
