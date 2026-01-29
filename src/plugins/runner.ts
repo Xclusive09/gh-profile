@@ -3,6 +3,7 @@ import { pluginRegistry } from './registry.js';
 import type { Plugin, PluginContext } from './types.js';
 import type { NormalizedData } from '../core/normalize.js';
 import { normalizedDataCache } from '../core/normalize.js';
+import { cloneDeep } from 'lodash-es';
 
 /**
  * Runs plugins in a specific lifecycle phase in deterministic order.
@@ -21,31 +22,34 @@ export class PluginRunner {
 
     /**
      * Run beforeRender hooks for all enabled plugins
+     * Each plugin receives a deep copy of the data to prevent mutation.
      */
     async runBeforeRender(data: NormalizedData): Promise<NormalizedData> {
         if (!pluginRegistry.isInitialized()) {
             throw new Error('PluginRegistry must be initialized before running plugin hooks.');
         }
         const plugins = pluginRegistry.getEnabledPlugins();
-        let currentData = data; // Use the same instance for all plugins
+        let currentData = data;
 
         for (const plugin of plugins) {
             if (plugin.beforeRender) {
                 try {
+                    // Deep copy to prevent mutation
                     const context: PluginContext = {
-                        data: currentData,
+                        data: cloneDeep(currentData),
                         content: '',
                         config: {},
                     };
-
                     await plugin.beforeRender(context);
-                    currentData = context.data;
+                    // Only allow plugin to return a new data object, not mutate shared state
+                    if (context.data && typeof context.data === 'object') {
+                        currentData = context.data;
+                    }
                 } catch (error) {
                     this.handleError(error, plugin, 'beforeRender');
                 }
             }
         }
-
         return currentData;
     }
 
@@ -60,6 +64,7 @@ export class PluginRunner {
 
     /**
      * Run render hooks for all enabled plugins
+     * Each plugin receives a deep copy of the data to prevent mutation.
      */
     async runRender(data: NormalizedData, content: string): Promise<string> {
         if (!pluginRegistry.isInitialized()) {
@@ -71,20 +76,17 @@ export class PluginRunner {
         for (const plugin of plugins) {
             if (plugin.render) {
                 try {
-                    // Pass the UPDATED currentContent, not the original
-                    const result = await plugin.render(currentContent, data);
-
-                    // Only update if result is a valid string
+                    // Deep copy to prevent mutation
+                    const pluginData = cloneDeep(data);
+                    const result = await plugin.render(currentContent, pluginData);
                     if (typeof result === 'string') {
                         currentContent = result;
                     }
                 } catch (error) {
                     this.handleError(error, plugin, 'render');
-                    // continue with previous content – don't break the chain
                 }
             }
         }
-
         return currentContent;
     }
     /**
@@ -98,6 +100,7 @@ export class PluginRunner {
 
     /**
      * Run afterRender hooks for all enabled plugins
+     * Each plugin receives a deep copy of the data to prevent mutation.
      */
     async runAfterRender(data: NormalizedData, content: string): Promise<string> {
         if (!pluginRegistry.isInitialized()) {
@@ -109,7 +112,9 @@ export class PluginRunner {
         for (const plugin of plugins) {
             if (plugin.afterRender) {
                 try {
-                    const result = await plugin.afterRender(currentContent, data);
+                    // Deep copy to prevent mutation
+                    const pluginData = cloneDeep(data);
+                    const result = await plugin.afterRender(currentContent, pluginData);
                     if (typeof result === 'string') {
                         currentContent = result;
                     }
@@ -118,7 +123,6 @@ export class PluginRunner {
                 }
             }
         }
-
         return currentContent;
     }
 
