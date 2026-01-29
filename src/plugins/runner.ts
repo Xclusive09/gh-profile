@@ -2,6 +2,7 @@ import { logger } from '../cli/logger.js';
 import { pluginRegistry } from './registry.js';
 import type { Plugin, PluginContext } from './types.js';
 import type { NormalizedData } from '../core/normalize.js';
+import { normalizedDataCache } from '../core/normalize.js';
 
 /**
  * Runs plugins in a specific lifecycle phase in deterministic order.
@@ -11,13 +12,22 @@ import type { NormalizedData } from '../core/normalize.js';
 export class PluginRunner {
     /**
      * Run beforeRender hooks for all enabled plugins
+     * Accepts raw GitHubData and caches normalization/aggregation.
+     */
+    async runBeforeRenderRaw(rawData: import('../github/types.js').GitHubData): Promise<NormalizedData> {
+        const data = normalizedDataCache.get(rawData);
+        return this.runBeforeRender(data);
+    }
+
+    /**
+     * Run beforeRender hooks for all enabled plugins
      */
     async runBeforeRender(data: NormalizedData): Promise<NormalizedData> {
         if (!pluginRegistry.isInitialized()) {
             throw new Error('PluginRegistry must be initialized before running plugin hooks.');
         }
         const plugins = pluginRegistry.getEnabledPlugins();
-        let currentData = { ...data };
+        let currentData = data; // Use the same instance for all plugins
 
         for (const plugin of plugins) {
             if (plugin.beforeRender) {
@@ -37,6 +47,15 @@ export class PluginRunner {
         }
 
         return currentData;
+    }
+
+    /**
+     * Run render hooks for all enabled plugins
+     * Accepts raw GitHubData and caches normalization/aggregation.
+     */
+    async runRenderRaw(rawData: import('../github/types.js').GitHubData, content: string): Promise<string> {
+        const data = normalizedDataCache.get(rawData);
+        return this.runRender(data, content);
     }
 
     /**
@@ -68,6 +87,15 @@ export class PluginRunner {
 
         return currentContent;
     }
+    /**
+     * Run afterRender hooks for all enabled plugins
+     * Accepts raw GitHubData and caches normalization/aggregation.
+     */
+    async runAfterRenderRaw(rawData: import('../github/types.js').GitHubData, content: string): Promise<string> {
+        const data = normalizedDataCache.get(rawData);
+        return this.runAfterRender(data, content);
+    }
+
     /**
      * Run afterRender hooks for all enabled plugins
      */

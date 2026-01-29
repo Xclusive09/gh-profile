@@ -69,3 +69,23 @@ export function normalize(data: GitHubData): NormalizedData {
 
   return { profile, repos, stats };
 }
+
+/**
+ * Caches normalized/aggregated data for a given GitHubData object (by reference).
+ * Prevents repeated normalization/aggregation for large profiles.
+ */
+export class NormalizedDataCache {
+  private cache = new WeakMap<GitHubData, NormalizedData>();
+
+  get(data: GitHubData): NormalizedData {
+    let cached = this.cache.get(data);
+    if (!cached) {
+      cached = normalize(data);
+      this.cache.set(data, cached);
+    }
+    return cached;
+  }
+}
+
+// Singleton cache instance for use across plugins/runners
+export const normalizedDataCache = new NormalizedDataCache();
