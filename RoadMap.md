@@ -48,7 +48,7 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 
 ---
 
-## 🚧 In Progress
+## ✅ Completed
 
 ### v0.4.0 (Plugin Architecture)
 - Plugin-based sections (projects, stats, socials, highlights)
@@ -58,6 +58,7 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 - Example plugins included in repo
 
 ---
+## 🚧 In Progress
 
 ### v1.0.0 (Stable CLI Release)
 - Stable plugin API
