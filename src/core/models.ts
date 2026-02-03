@@ -53,4 +53,5 @@ export interface NormalizedData {
   profile: Profile;
   repos: Repository[];
   stats: ProfileStats;
+  tools?: string[];
 }

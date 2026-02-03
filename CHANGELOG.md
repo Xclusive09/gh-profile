@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+### Added
+- **Resilience-First Architecture**: Implemented **Hybrid Rendering** across all templates. All dynamic image sections (Stats, Languages, Performance) now include Markdown text/table fallbacks to ensure profile readability during external service outages.
+- **Stable Core Metrics**: Shifted total stars, forks, and followers to `shields.io` badges for guaranteed reliability.
+
+### Changed
+- **v1.0.0 Aesthetic Finalization**: Comprehensive update to `minimal`, `stats-heavy`, and `showcase` for a professional, "boostfull" look.
+- **Interactive Tech Stack**: The CLI now prompts you to enter your favorite tools and frameworks (e.g., `git,react,docker`) during profile generation, ensuring your specific stack is highlighted.
+- **Provider Swap**: Replaced `github-readme-stats` with `github-readme-stats-one` to resolve service outages.
+- **Frameworks & Tools**: Added a new "Tools & Frameworks" section to `minimal` and `stats-heavy` templates, tailored for standard full-stack profiles.
+- **Expanded Languages**: Increased the language count in charts from 6 to 10 for a more comprehensive skill overview.
+- **Enhanced Featured Projects**: Upgraded "Featured Projects" section in ALL templates to use visual **Repo Pin Cards** instead of text lists.
+- **Dracula Theme Standardization**: Switched all dynamic cards to the high-contrast `dracula` theme for robust visibility across light/dark GitHub modes.
+- **Improved Bio Rendering**: Implemented robust sanitization to handle multi-line bios and prevent broken HTML tags.
+
 ## [1.0.0] - 2026-01-29
 
 ### Added

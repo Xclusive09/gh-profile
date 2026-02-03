@@ -74,7 +74,9 @@ describe('showcaseTemplate', () => {
             expect(showcaseTemplate.metadata).toMatchObject({
                 id: 'showcase',
                 name: 'Project Showcase',
+                description: 'High-impact, premium showcase for professional developers',
                 category: 'developer',
+                version: '1.0.0',
             });
         });
     });
@@ -85,48 +87,40 @@ describe('showcaseTemplate', () => {
 
         it('renders centered header with name', () => {
             expect(output).toContain('<div align="center">');
-            expect(output).toContain('<h1>Hey there 👋 I\'m Test User</h1>');
+            expect(output).toContain('<h1>Test User</h1>');
+            expect(output).toContain('<p align="center"><strong>A passionate developer</strong></p>');
         });
 
         it('renders connect section with profile fields', () => {
-            expect(output).toContain('## Connect with me');
-            expect(output).toContain('🌍 San Francisco');
-            expect(output).toContain('💼 Test Corp');
-            expect(output).toContain('[testuser.dev](https://testuser.dev)');
-            expect(output).toContain('[@testuser](https://twitter.com/testuser)');
+            expect(output).toContain('<h3>Social Connections</h3>');
+            expect(output).toContain('img src="https://img.shields.io/badge/Location-San%20Francisco-0f172a');
+            expect(output).toContain('img src="https://img.shields.io/badge/Portfolio-0f172a');
+            expect(output).toContain('img src="https://img.shields.io/badge/Twitter-0f172a');
         });
 
-        it('renders stats overview table', () => {
-            expect(output).toContain('## GitHub at a Glance');
-            expect(output).toContain('Total Stars');
-            expect(output).toContain('150 ⭐');
-            expect(output).toContain('Forks');
-            expect(output).toContain('30 🍴');
-            expect(output).toContain('Followers');
-            expect(output).toContain('100 👥');
+        it('renders stats and stable badges', () => {
+            expect(output).toContain('img src="https://img.shields.io/badge/Stars-150-f59e0b');
+            expect(output).toContain('img src="https://img.shields.io/badge/Followers-100-0ea5e9');
+            expect(output).toContain('img src="https://komarev.com/ghpvc/?username=testuser&label=PROFILE+VIEWS');
+
+            // Performance Text Fallback
+            expect(output).toContain('| Repos | Stars | Forks | Commits |');
+            expect(output).toContain('| 25 | 150 | 30 |');
         });
 
-        it('renders technologies with progress bars', () => {
-            expect(output).toContain('## Top Technologies');
-            expect(output).toContain('`TypeScript');
-            expect(output).toContain('█'); // at least some bar
-            expect(output).toContain('100%');
+        it('renders technologies', () => {
+            expect(output).toContain('<h3>Tech Stack</h3>');
+            expect(output).toContain('skillicons.dev/icons?i=ts');
+            expect(output).toContain('langs_count=10');
         });
 
         it('renders featured projects', () => {
-            expect(output).toContain('## Featured Projects');
-            expect(output).toContain('[popular-repo]');
-            expect(output).toContain('A very popular repo');
-            expect(output).toContain('⭐ 100');
-            expect(output).toContain('`test`');
-            expect(output).toContain('`awesome`');
+            expect(output).toContain('<h3>Featured Projects</h3>');
+            expect(output).toContain('github-readme-stats-one.vercel.app/api/pin/?username=testuser');
+            expect(output).toContain('repo=popular-repo');
         });
 
-        it('renders recent activity', () => {
-            expect(output).toContain('## Recent Activity');
-            expect(output).toContain('Updated [**popular-repo**]');
-            expect(output).toContain('Jan 15, 2024');
-        });
+        // Recent activity removed in v1.0.0 showcase
 
         it('renders footer with attribution', () => {
             expect(output).toContain('<div align="center">');
@@ -151,7 +145,7 @@ describe('showcaseTemplate', () => {
 
             expect(output).not.toContain('null');
             expect(output).not.toContain('undefined');
-            expect(output).toContain('Hey there 👋 I\'m Test User');
+            expect(output).toContain('<h1>Test User</h1>');
         });
 
         it('handles empty repos list', () => {
@@ -169,9 +163,8 @@ describe('showcaseTemplate', () => {
 
             const output = showcaseTemplate.render(data);
 
-            expect(output).not.toContain('## Featured Projects');
-            expect(output).not.toContain('## Recent Activity');
-            expect(output).not.toContain('## Top Technologies');
+            expect(output).not.toContain('<h3>Featured Projects</h3>');
+            expect(output).not.toContain('<h3>Tech Stack</h3>');
         });
     });
 });

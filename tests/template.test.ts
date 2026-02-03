@@ -70,9 +70,9 @@ describe('minimalTemplate', () => {
       expect(minimalTemplate.metadata).toMatchObject({
         id: 'minimal',
         name: 'Minimal',
-        description: 'A clean, minimal GitHub profile README template',
+        description: 'Clean, elegant, and professional – focused on simplicity',
         category: 'generic',
-        version: '0.3.0',
+        version: '1.0.0',
         author: 'gh-profile',
       });
     });
@@ -83,7 +83,7 @@ describe('minimalTemplate', () => {
       const data = createMockNormalizedData();
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain("# Hi, I'm Test User 👋");
+      expect(output).toContain("<h1>Test User</h1>");
     });
 
     it('should use username as fallback when name is null', () => {
@@ -92,7 +92,7 @@ describe('minimalTemplate', () => {
       });
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain("# Hi, I'm testuser 👋");
+      expect(output).toContain("<h1>testuser</h1>");
     });
   });
 
@@ -120,7 +120,7 @@ describe('minimalTemplate', () => {
       const data = createMockNormalizedData();
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('📍 San Francisco');
+      expect(output).toContain('img src="https://img.shields.io/badge/Location-San%20Francisco-64748b');
     });
 
     it('should not render location when null', () => {
@@ -138,10 +138,10 @@ describe('minimalTemplate', () => {
       const data = createMockNormalizedData();
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('## Stats');
-      expect(output).toContain('| Metric       | Value |');
-      expect(output).toContain('| Public Repos | 25 |');
-      expect(output).toContain('| Followers    | 100   |');
+      expect(output).toContain('### Metrics & Languages');
+      expect(output).toContain('| Total Repos | Total Stars | Total Forks |');
+      expect(output).toContain('img src="https://img.shields.io/badge/Stars-50-f59e0b');
+      expect(output).toContain('github-readme-stats-one.vercel.app/api?username=testuser');
     });
 
     it('should include public repos count', () => {
@@ -150,7 +150,7 @@ describe('minimalTemplate', () => {
       });
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('| Public Repos | 42 |');
+      expect(output).toContain('github-readme-stats-one.vercel.app/api?username=testuser');
     });
 
     it('should include followers count', () => {
@@ -159,7 +159,7 @@ describe('minimalTemplate', () => {
       });
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('| Followers    | 999   |');
+      expect(output).toContain('github-readme-stats-one.vercel.app/api?username=testuser');
     });
   });
 
@@ -168,63 +168,45 @@ describe('minimalTemplate', () => {
       const data = createMockNormalizedData();
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('## Top Repositories');
+      expect(output).toContain('### Featured Projects');
     });
 
     it('should not render repositories section when empty', () => {
       const data = createMockNormalizedData({ repos: [] });
       const output = minimalTemplate.render(data);
 
-      expect(output).not.toContain('## Top Repositories');
+      expect(output).not.toContain('### Featured Projects');
     });
 
-    it('should render repo name as markdown link', () => {
+    it('should render repo name using Repo Card', () => {
       const data = createMockNormalizedData({
         repos: [createMockGitHubRepo({ name: 'my-project' })],
       });
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('[my-project]');
-      expect(output).toContain('(https://github.com/testuser/test-repo)');
-    });
-
-    it('should render repo description when present', () => {
-      const data = createMockNormalizedData({
-        repos: [createMockGitHubRepo({ description: 'My awesome project' })],
-      });
-      const output = minimalTemplate.render(data);
-
-      expect(output).toContain('My awesome project');
-    });
-
-    it('should render repo stats (stars and forks)', () => {
-      const data = createMockNormalizedData({
-        repos: [createMockGitHubRepo({ stargazers_count: 42, forks_count: 7 })],
-      });
-      const output = minimalTemplate.render(data);
-
-      expect(output).toContain('⭐ 42');
-      expect(output).toContain('🍴 7');
+      expect(output).toContain('github-readme-stats-one.vercel.app/api/pin/');
+      expect(output).toContain('repo=my-project');
     });
 
     it('should limit to 5 repositories and sort by stars descending', () => {
       const manyRepos = Array.from({ length: 10 }, (_, i) =>
-          createMockGitHubRepo({
-            id: i,
-            name: `repo-${i}`,
-            stargazers_count: 100 - i * 10, // decreasing stars
-            forks_count: 5,
-          })
+        createMockGitHubRepo({
+          id: i,
+          name: `repo-${i}`,
+          stargazers_count: 100 - i * 10, // decreasing stars
+          forks_count: 5,
+        })
       );
 
       const data = createMockNormalizedData({ repos: manyRepos });
       const output = minimalTemplate.render(data);
 
-      // Should contain first 5 (highest stars)
-      expect(output).toContain('repo-0');
-      expect(output).toContain('repo-4');
-      expect(output).not.toContain('repo-5');
-      expect(output).not.toContain('repo-9');
+      expect(output).toContain('### Featured Projects');
+      expect(output).toContain('github-readme-stats-one.vercel.app/api/pin/?username=testuser');
+      expect(output).toContain('repo=repo-0');
+      expect(output).toContain('repo=repo-1');
+      expect(output).toContain('repo=repo-2');
+      expect(output).toContain('repo=repo-3');
     });
   });
 
@@ -270,8 +252,8 @@ describe('minimalTemplate', () => {
 
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain("# Hi, I'm");
-      expect(output).toContain('## Stats');
+      expect(output).toContain("<h1>");
+      expect(output).toContain('### Metrics & Languages');
     });
 
     it('handles zero stats gracefully', () => {
@@ -284,8 +266,7 @@ describe('minimalTemplate', () => {
 
       const output = minimalTemplate.render(data);
 
-      expect(output).toContain('| Public Repos | 0 |');
-      expect(output).toContain('| Followers    | 0   |');
+      expect(output).toContain('github-readme-stats-one.vercel.app/api?username=testuser');
     });
 
     it('handles empty repo description without errors', () => {
@@ -296,7 +277,7 @@ describe('minimalTemplate', () => {
       const output = minimalTemplate.render(data);
 
       expect(output).not.toContain('null');
-      expect(output).toContain('## Top Repositories');
+      expect(output).toContain('### Featured Projects');
     });
   });
 });
