@@ -65,9 +65,9 @@ describe('minimalTemplate', () => {
             expect(minimalTemplate.metadata).toMatchObject({
                 id: 'minimal',
                 name: 'Minimal',
-                description: 'A clean, minimal GitHub profile README template',
+                description: 'Clean, elegant, and professional – focused on simplicity',
                 category: 'generic',
-                version: '0.3.0',
+                version: '1.0.0',
                 author: 'gh-profile',
             });
         });
@@ -78,16 +78,25 @@ describe('minimalTemplate', () => {
             const normalized = createNormalizedData();
             const output = minimalTemplate.render(normalized);
 
-            expect(output).toContain("# Hi, I'm Test User 👋");
+            expect(output).toContain('<h1>Test User</h1>');
             expect(output).toContain('A passionate developer');
-            expect(output).toContain('📍 San Francisco');
-            expect(output).toContain('## Stats');
-            expect(output).toContain('| Public Repos | 25 |');
-            expect(output).toContain('| Followers    | 100   |');
-            expect(output).toContain('## Top Repositories');
-            expect(output).toContain('[test-repo](https://github.com/testuser/test-repo)');
-            expect(output).toContain('A test repository');
-            expect(output).toContain('⭐ 50 • 🍴 10');
+            expect(output).toContain('img src="https://img.shields.io/badge/Location-San%20Francisco-64748b');
+            expect(output).toContain('img src="https://img.shields.io/badge/Stars-50-f59e0b');
+            expect(output).toContain('img src="https://img.shields.io/badge/Followers-100-0ea5e9');
+            expect(output).toContain('img src="https://komarev.com/ghpvc/?username=testuser&label=PROFILE+VIEWS');
+
+            // Text Fallback Check
+            expect(output).toContain('| Total Repos | Total Stars | Total Forks |');
+            expect(output).toContain('| 25 | 50 | 10 |');
+
+            expect(output).toContain('skillicons.dev/icons?i=git,docker');
+            expect(output).toContain('langs_count=10');
+            expect(output).toContain('### Metrics & Languages');
+            expect(output).toContain('github-readme-stats-one.vercel.app/api?username=testuser');
+            expect(output).toContain('github-readme-stats-one.vercel.app/api/top-langs/?username=testuser');
+            expect(output).toContain('### Featured Projects');
+            expect(output).toContain('github-readme-stats-one.vercel.app/api/pin/?username=testuser&repo=test-repo');
+            expect(output).toContain('img src="https://img.shields.io/badge/-Work-0f172a');
         });
     });
 
@@ -96,7 +105,7 @@ describe('minimalTemplate', () => {
             const normalized = createNormalizedData({
                 user: createMockGitHubUser({ name: null }),
             });
-            expect(minimalTemplate.render(normalized)).toContain("# Hi, I'm testuser 👋");
+            expect(minimalTemplate.render(normalized)).toContain("<h1>testuser</h1>");
         });
 
         it('omits bio when missing', () => {
@@ -112,12 +121,12 @@ describe('minimalTemplate', () => {
             const normalized = createNormalizedData({
                 user: createMockGitHubUser({ location: null }),
             });
-            expect(minimalTemplate.render(normalized)).not.toContain('📍');
+            expect(minimalTemplate.render(normalized)).not.toContain('google-maps');
         });
 
         it('omits repositories section when no repos', () => {
             const normalized = createNormalizedData({ repos: [] });
-            expect(minimalTemplate.render(normalized)).not.toContain('## Top Repositories');
+            expect(minimalTemplate.render(normalized)).not.toContain('### Featured Work');
         });
 
         it('limits to 5 repositories and sorts by stars descending', () => {
@@ -133,9 +142,9 @@ describe('minimalTemplate', () => {
             const output = minimalTemplate.render(normalized);
 
             expect(output).toContain('repo-0'); // highest stars
-            expect(output).toContain('repo-4');
-            expect(output).not.toContain('repo-5'); // outside top 5
-            expect(output).not.toContain('repo-7');
+            expect(output).toContain('repo-2');
+            expect(output).toContain('repo-3'); // 4th repo should be present
+            expect(output).not.toContain('repo-4'); // 5th repo should be absent
 
             const first = output.indexOf('repo-0');
             const second = output.indexOf('repo-1');

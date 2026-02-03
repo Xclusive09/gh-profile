@@ -5,114 +5,135 @@ export const showcaseTemplate: Template = {
     metadata: {
         id: 'showcase',
         name: 'Project Showcase',
-        description: 'A template focused on highlighting your best projects',
+        description: 'High-impact, premium showcase for professional developers',
         category: 'developer',
-        version: '0.1.0',
+        version: '1.0.0',
         author: 'gh-profile',
         source: 'built-in'
     },
 
-
     render: (data: NormalizedData): string => {
         const { profile, stats } = data;
-        const name = profile.name || profile.username;
+        const username = profile.username;
+        const name = profile.name || username;
 
-        let md = `<div align="center">\n`;
+        const baseUrl = 'https://skillicons.dev/icons?i=';
+        const iconMapping: Record<string, string> = {
+            'javascript': 'js',
+            'typescript': 'ts',
+            'python': 'py',
+            'html': 'html',
+            'css': 'css',
+            'java': 'java',
+            'kotlin': 'kotlin',
+            'c': 'c',
+            'shell': 'bash',
+        };
+        const defaultIcon = 'code';
 
-        md += `  <h1>Hey there 👋 I'm ${name}</h1>\n\n`;
+        const theme = 'dracula';
+        const timestamp = new Date().getTime();
 
-        if (profile.bio) {
-            md += `  <h3>${profile.bio}</h3>\n\n`;
+        let md = '';
+
+        // Helper to safely format bio for HTML
+        const safeBio = profile.bio ? profile.bio.replace(/\r?\n|\r/g, ' ').trim() : '';
+
+        // Hero Section
+        md += `<div align="center">\n`;
+        md += `  <h1>${name}</h1>\n`;
+        if (safeBio) {
+            md += `  <p align="center"><strong>${safeBio}</strong></p>\n`;
+        }
+        md += `</div>\n\n<br>\n\n`;
+
+        // Profile Views & Core Stats
+        md += `<div align="center">\n`;
+        const profileBadges: string[] = [];
+        profileBadges.push(`<img src="https://img.shields.io/badge/Stars-${stats.totalStars}-f59e0b?style=flat-square&logo=github-sponsors&logoColor=white" alt="total stars" />`);
+        profileBadges.push(`<img src="https://img.shields.io/badge/Followers-${profile.followers}-0ea5e9?style=flat-square&logo=github&logoColor=white" alt="followers" />`);
+        profileBadges.push(`<img src="https://komarev.com/ghpvc/?username=${username}&label=PROFILE+VIEWS&color=0f172a&style=flat-square" alt="profile views" />`);
+
+        md += `  <p>${profileBadges.join('&nbsp;&nbsp;')}</p>\n`;
+        md += `</div>\n\n<br>\n\n`;
+
+        // Social Connections
+        md += `<div align="center">\n`;
+        md += `  <h3>Social Connections</h3>\n\n`;
+
+        const socials: string[] = [];
+        if (profile.location) {
+            socials.push(`<img src="https://img.shields.io/badge/Location-${encodeURIComponent(profile.location)}-0f172a?style=flat-square&logo=google-maps&logoColor=white" alt="location">`);
+        }
+        if (profile.blog) {
+            socials.push(`<a href="${profile.blog}"><img src="https://img.shields.io/badge/Portfolio-0f172a?style=flat-square&logo=google-chrome&logoColor=white" alt="website"></a>`);
+        }
+        if (profile.twitter) {
+            socials.push(`<a href="https://twitter.com/${profile.twitter}"><img src="https://img.shields.io/badge/Twitter-0f172a?style=flat-square&logo=twitter&logoColor=white" alt="twitter"></a>`);
         }
 
-        md += `</div>\n\n`;
+        md += `${socials.join('&nbsp;&nbsp;')}\n`;
+        md += `</div>\n\n<br><br>\n\n`;
 
-        // Connect section
-        md += `## Connect with me\n\n`;
+        // GitHub Performance - Hybrid Rendering
+        md += `<div align="center">\n`;
+        md += `  <h3>GitHub Performance</h3>\n\n`;
 
-        const links: string[] = [];
+        // Text Fallback Table
+        md += `| Repos | Stars | Forks | Commits |\n`;
+        md += `| :--- | :--- | :--- | :--- |\n`;
+        md += `| ${profile.publicRepos} | ${stats.totalStars} | ${stats.totalForks} | Active |\n\n`;
 
-        if (profile.location) links.push(`🌍 ${profile.location}`);
-        if (profile.company) links.push(`💼 ${profile.company}`);
-        if (profile.blog) links.push(`🌐 [${profile.blog.replace(/^https?:\/\//, '')}](${profile.blog})`);
-        if (profile.twitter) links.push(`🐦 [@${profile.twitter}](https://twitter.com/${profile.twitter})`);
-        if (profile.email) links.push(`✉️ [${profile.email}](mailto:${profile.email})`);
+        md += `  <img src="https://github-readme-stats-one.vercel.app/api?username=${username}&show_icons=true&theme=${theme}&hide_border=true&include_all_commits=true&t=${timestamp}" alt="github stats" />\n`;
+        md += `</div>\n\n<br>\n\n`;
 
-        md += links.map(item => `**${item}**`).join('  ·  ') + '\n\n';
-
-        // Stats overview
-        md += `## GitHub at a Glance\n\n`;
-
-        md += `| Metric            | Value              |\n`;
-        md += `|-------------------|--------------------|\n`;
-        md += `| Repositories      | ${stats.totalRepos.toLocaleString()} |\n`;
-        md += `| Total Stars       | ${stats.totalStars.toLocaleString()} ⭐ |\n`;
-        md += `| Forks             | ${stats.totalForks.toLocaleString()} 🍴 |\n`;
-        md += `| Followers         | ${profile.followers.toLocaleString()} 👥 |\n`;
-        md += `| Following         | ${profile.following.toLocaleString()} 👀 |\n\n`;
-
-        // Languages with progress bars
+        // Technologies Section
         if (stats.languages.length > 0) {
-            md += `## Top Technologies\n\n`;
+            md += `<div align="center">\n`;
+            md += `  <h3>Tech Stack</h3>\n\n`;
 
-            const max = Math.max(...stats.languages.map(l => l.count));
-
-            stats.languages
+            const processedLangs = stats.languages
                 .sort((a, b) => b.percentage - a.percentage)
-                .forEach(lang => {
-                    const width = Math.round((lang.count / max) * 25);
-                    const bar = '█'.repeat(width) + '░'.repeat(25 - width);
-                    md += `\`${lang.name.padEnd(14)}\` ${bar} **${lang.percentage}%**\n`;
-                });
+                .slice(0, 10)
+                .map(lang => lang.name.toLowerCase().trim())
+                .map(lang => iconMapping[lang] || defaultIcon)
+                .filter(Boolean);
 
-            md += '\n';
+            // Combine manual tools with auto-detected languages (deduplicated)
+            const combinedStack = Array.from(new Set([
+                ...(data.tools || []),
+                ...processedLangs
+            ]));
+
+            const techStack = combinedStack.join(',');
+
+            md += `  <img src="https://skillicons.dev/icons?i=${techStack}" alt="tech stack" />\n`;
+            md += `  <br><br>\n`;
+            md += `  <img src="https://github-readme-stats-one.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${theme}&hide_border=true&langs_count=10&t=${timestamp}" alt="top languages" />\n`;
+            md += `</div>\n\n<br>\n\n`;
         }
 
-        // Featured work
+        // Featured Projects Section
         if (stats.topRepos.length > 0) {
-            md += `## Featured Projects\n\n`;
+            md += `<div align="center">\n`;
+            md += `  <h3>Featured Projects</h3>\n\n`;
 
-            stats.topRepos.slice(0, 6).forEach(r => {
-                md += `### [${r.name}](${r.url})\n`;
-
-                if (r.description) {
-                    md += `> ${r.description.trim()}\n\n`;
+            const featured = stats.topRepos.slice(0, 4);
+            for (let i = 0; i < featured.length; i += 2) {
+                md += `  <img src="https://github-readme-stats-one.vercel.app/api/pin/?username=${username}&repo=${encodeURIComponent(featured[i].name)}&theme=${theme}&hide_border=true&t=${timestamp}" alt="${featured[i].name}" />\n`;
+                if (i + 1 < featured.length) {
+                    md += `  <img src="https://github-readme-stats-one.vercel.app/api/pin/?username=${username}&repo=${encodeURIComponent(featured[i + 1].name)}&theme=${theme}&hide_border=true&t=${timestamp}" alt="${featured[i + 1].name}" />\n`;
                 }
-
-                const info = [
-                    r.stars > 0 ? `⭐ ${r.stars.toLocaleString()}` : '',
-                    r.forks > 0 ? `🍴 ${r.forks}` : '',
-                    r.language ? `💻 ${r.language}` : '',
-                ].filter(Boolean);
-
-                if (info.length) md += info.join(' · ') + '\n\n';
-
-                if (r.topics?.length) {
-                    md += r.topics.map(t => `\`${t}\``).join(' ') + '\n\n';
-                }
-            });
+                if (i + 2 < featured.length) md += `<br><br>\n`;
+            }
+            md += `</div>\n\n<br><br>\n\n`;
         }
 
-        // Recent updates
-        if (stats.recentRepos.length > 0) {
-            md += `## Recent Activity\n\n`;
-
-            stats.recentRepos.slice(0, 5).forEach(r => {
-                const date = r.pushedAt.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                });
-                md += `- 📦 Updated [**${r.name}**](${r.url}) — ${date}\n`;
-            });
-
-            md += '\n';
-        }
-
-        md += `---\n\n`;
-        md += `<p align="center">\n`;
-        md += `  <sub>Generated with <a href="https://github.com/yourusername/gh-profile">gh-profile</a> • ${new Date().getFullYear()}</sub>\n`;
-        md += `</p>\n`;
+        // Footer
+        md += `<hr>\n\n`;
+        md += `<div align="center">\n`;
+        md += `  <sub>Generated with <a href="https://github.com/Xclusive09/gh-profile">gh-profile</a> • ${new Date().getFullYear()}</sub>\n`;
+        md += `</div>\n`;
 
         return md.trim();
     },

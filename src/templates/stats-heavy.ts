@@ -5,9 +5,9 @@ export const statsHeavyTemplate: Template = {
     metadata: {
         id: 'stats-heavy',
         name: 'Stats Dashboard',
-        description: 'A data-rich template with comprehensive GitHub statistics',
+        description: 'A comprehensive, data-driven dashboard for the analytical developer',
         category: 'developer',
-        version: '0.3.0',
+        version: '1.0.0',
         author: 'gh-profile',
         source: 'built-in'
     },
@@ -15,64 +15,108 @@ export const statsHeavyTemplate: Template = {
 
     render: (data: NormalizedData): string => {
         const { profile, repos, stats } = data;
+        const username = profile.username;
 
-        let markdown = `# ${profile.name} | GitHub Statistics\n\n`;
+        const theme = 'dracula';
+        const timestamp = new Date().getTime();
 
-        // Account Statistics
-        markdown += '## Account Metrics\n\n';
-        markdown += '| Metric | Value |\n';
-        markdown += '|--------|-------|\n';
-        markdown += `| Account Age | ${getAccountAge(profile.createdAt)} years |\n`;
-        markdown += `| Public Repositories | ${profile.publicRepos} |\n`;
-        markdown += `| Followers | ${profile.followers} |\n`;
-        markdown += `| Following | ${profile.following} |\n`;
-        markdown += `| Following Ratio | ${calculateRatio(profile.followers, profile.following)} |\n\n`;
+        let markdown = `<div align="center">\n`;
+        markdown += `  <h1>${profile.name} | Analytics Dashboard</h1>\n`;
 
-        // Repository Statistics
-        markdown += '## Repository Analytics\n\n';
-        markdown += '| Metric | Count | Per Repository |\n';
-        markdown += '|--------|-------|----------------|\n';
-        markdown += `| Total Stars | ${stats.totalStars} | ${calculateAverage(stats.totalStars, stats.totalRepos)} |\n`;
-        markdown += `| Total Forks | ${stats.totalForks} | ${calculateAverage(stats.totalForks, stats.totalRepos)} |\n`;
-        markdown += `| Open Source | ${countOpenSource(repos)} | ${calculatePercentage(countOpenSource(repos), repos.length)}% |\n`;
-        markdown += `| Original Work | ${countOriginal(repos)} | ${calculatePercentage(countOriginal(repos), repos.length)}% |\n`;
-        markdown += `| Active Projects | ${countActive(repos)} | ${calculatePercentage(countActive(repos), repos.length)}% |\n\n`;
+        const headerBadges: string[] = [];
+        headerBadges.push(`<img src="https://img.shields.io/badge/Stars-${stats.totalStars}-f59e0b?style=flat-square&logo=github-sponsors&logoColor=white" alt="total stars" />`);
+        headerBadges.push(`<img src="https://img.shields.io/badge/Followers-${profile.followers}-0ea5e9?style=flat-square&logo=github&logoColor=white" alt="followers" />`);
+        headerBadges.push(`<img src="https://komarev.com/ghpvc/?username=${username}&label=PROFILE+VIEWS&color=0f172a&style=flat-square" alt="profile views" />`);
 
-        // Language Distribution
-        markdown += '## Language Distribution\n\n';
-        markdown += '| Language | Repositories | Percentage | Stars |\n';
-        markdown += '|----------|--------------|------------|-------|\n';
+        markdown += `  <p>${headerBadges.join('&nbsp;&nbsp;')}</p>\n`;
+        markdown += `</div>\n\n`;
 
-        const languageStats = calculateLanguageStats(repos);
-        Object.entries(languageStats)
-            .sort(([, a], [, b]) => b.count - a.count)
-            .forEach(([language, stats]) => {
-                markdown += `| ${language} | ${stats.count} | ${stats.percentage}% | ${stats.stars} |\n`;
-            });
-        markdown += '\n';
+        // GitHub Stats Cards - Hybrid Rendering
+        markdown += `<div align="center">\n`;
+        markdown += `  <img src="https://github-readme-stats-one.vercel.app/api?username=${username}&show_icons=true&theme=${theme}&hide_border=true&count_private=true&t=${timestamp}" alt="GitHub Stats" />\n`;
+        markdown += `  <img src="https://github-readme-stats-one.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${theme}&hide_border=true&langs_count=10&t=${timestamp}" alt="Top Languages" />\n`;
+        markdown += `</div>\n\n`;
+
+        // Text Fallback for Languages
+        if (stats.languages.length > 0) {
+            markdown += `<p align="center"><strong>Top Languages:</strong> ${stats.languages.slice(0, 5).map(l => `${l.name} (${l.percentage}%)`).join(', ')}</p>\n\n`;
+        }
+
+        markdown += `<div align="center">\n`;
+        markdown += `  <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}&hide_border=true" alt="GitHub Streak" />\n`;
+        markdown += `</div>\n\n<br>\n\n`;
+
+        // Account Statistics Section
+        markdown += `### Key Metrics <img src="https://img.shields.io/badge/-Stats-0f172a?style=flat-square&logo=chart-bar&logoColor=white" alt="metrics" />\n\n`;
+        markdown += `| Metric | Value | Detail |\n`;
+        markdown += `| :--- | :--- | :--- |\n`;
+        markdown += `| **Account Age** | ${getAccountAge(profile.createdAt)} years | Joined ${formatDate(profile.createdAt)} |\n`;
+        markdown += `| **Total Repos** | ${profile.publicRepos} | ${countOriginal(repos)} Original |\n`;
+        markdown += `| **Community** | ${profile.followers} | ${calculateRatio(profile.followers, profile.following)} Ratio |\n\n`;
+
+        // Repository Analysis Section
+        markdown += `### Repository Insights <img src="https://img.shields.io/badge/-Insights-0f172a?style=flat-square&logo=git-branch&logoColor=white" alt="insights" />\n\n`;
+        markdown += `| Aspect | Count | Efficiency |\n`;
+        markdown += `| :--- | :--- | :--- |\n`;
+        markdown += `| **Total Stars** | ${stats.totalStars} | ${calculateAverage(stats.totalStars, stats.totalRepos)} avg/repo |\n`;
+        markdown += `| **Total Forks** | ${stats.totalForks} | ${calculateAverage(stats.totalForks, stats.totalRepos)} avg/repo |\n`;
+        markdown += `| **Active Projects** | ${countActive(repos)} | ${calculatePercentage(countActive(repos), repos.length)}% activity |\n\n`;
 
         // Repository Timeline
-        markdown += '## Repository Timeline\n\n';
-        markdown += '| Year | New Repositories | Total Stars | Forks |\n';
-        markdown += '|------|------------------|-------------|-------|\n';
+        markdown += `### Productivity Timeline <img src="https://img.shields.io/badge/-Timeline-0f172a?style=flat-square&logo=clock&logoColor=white" alt="timeline" />\n\n`;
+        markdown += `| Year | New Repos | Stars | Forks |\n`;
+        markdown += `| :--- | :--- | :--- | :--- |\n`;
 
         const timeline = calculateTimeline(repos);
         Object.entries(timeline)
             .sort((a, b) => Number(b[0]) - Number(a[0]))
-            .forEach(([year, stats]) => {
-                markdown += `| ${year} | ${stats.count} | ${stats.stars} | ${stats.forks} |\n`;
+            .forEach(([year, s]) => {
+                markdown += `| ${year} | ${s.count} | ${s.stars} | ${s.forks} |\n`;
             });
         markdown += '\n';
 
-        // Top Performing Repositories
-        markdown += '## Top Performing Repositories\n\n';
-        markdown += '| Repository | Stars | Forks | Issues | Created | Last Push |\n';
-        markdown += '|------------|-------|-------|--------|---------|-----------|\n';
+        // Tools & Frameworks
+        const iconMapping: Record<string, string> = {
+            'javascript': 'js', 'typescript': 'ts', 'python': 'py', 'html': 'html', 'css': 'css',
+            'java': 'java', 'kotlin': 'kotlin', 'c': 'c', 'shell': 'bash', 'go': 'go', 'rust': 'rust'
+        };
+        const detectedLangs = stats.languages
+            .map(l => l.name.toLowerCase().trim())
+            .map(l => iconMapping[l])
+            .filter(Boolean);
 
-        getTopRepos(repos, 5).forEach(repo => {
-            markdown += `| [${repo.name}](${repo.url}) | ${repo.stars} | ${repo.forks} | ${repo.issues} | `;
-            markdown += `${formatDate(repo.createdAt)} | ${formatDate(repo.pushedAt)} |\n`;
-        });
+        const combinedTools = Array.from(new Set([
+            ...(data.tools || []),
+            ...detectedLangs
+        ]));
+
+        const toolsList = combinedTools.length ? combinedTools.join(',') : 'git,docker,vscode,linux,github,gmail,stackoverflow,twitter';
+        markdown += `### Tools & Frameworks <img src="https://img.shields.io/badge/-Tools-0f172a?style=flat-square&logo=tools&logoColor=white" alt="tools" />\n\n`;
+        markdown += `<div align="center">\n`;
+        markdown += `  <img src="https://skillicons.dev/icons?i=${toolsList}" alt="tools" />\n`;
+        markdown += `</div>\n\n<br>\n\n`;
+
+        // Featured Projects - Repo Pins
+        markdown += `### Featured Projects <img src="https://img.shields.io/badge/-Projects-0f172a?style=flat-square&logo=star&logoColor=white" alt="top" />\n\n`;
+        markdown += `<div align="center">\n`;
+
+        const topRepos = [...repos]
+            .sort((a, b) => b.stars - a.stars)
+            .slice(0, 4);
+
+        for (const repo of topRepos) {
+            markdown += `  <a href="${repo.url}">\n`;
+            markdown += `    <img src="https://github-readme-stats-one.vercel.app/api/pin/?username=${username}&repo=${repo.name}&theme=${theme}&hide_border=true&t=${timestamp}" alt="${repo.name}" />\n`;
+            markdown += `  </a>\n`;
+        }
+        markdown += `</div>\n\n`;
+
+        // Footer
+        markdown += `<hr>\n\n`;
+        markdown += `<hr>\n\n`;
+        markdown += `<div align="center">\n`;
+        markdown += `  <sub>Generated with <a href="https://github.com/Xclusive09/gh-profile">gh-profile</a> • ${new Date().getFullYear()}</sub>\n`;
+        markdown += `</div>\n`;
 
         return markdown;
     },
