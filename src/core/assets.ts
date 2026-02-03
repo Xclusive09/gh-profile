@@ -71,6 +71,7 @@ export async function makeAssetsLocal(
     try {
         await fs.mkdir(assetsDir, { recursive: true });
     } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         // ignore if exists
     }
 

@@ -141,9 +141,9 @@ function calculatePercentage(part: number, total: number): number {
     return Math.round((part / (total || 1)) * 100);
 }
 
-function countOpenSource(repos: Repository[]): number {
-    return repos.filter(r => !r.isArchived && r.language !== null).length;
-}
+// function countOpenSource(repos: Repository[]): number {
+//     return repos.filter(r => !r.isArchived && r.language !== null).length;
+// }
 
 function countOriginal(repos: Repository[]): number {
     return repos.filter(r => !r.isFork).length;
@@ -161,28 +161,28 @@ interface LanguageStat {
     percentage: number;
 }
 
-function calculateLanguageStats(repos: Repository[]): Record<string, LanguageStat> {
-    const stats: Record<string, LanguageStat> = {};
+// function calculateLanguageStats(repos: Repository[]): Record<string, LanguageStat> {
+//     const stats: Record<string, LanguageStat> = {};
 
-    repos.forEach(repo => {
-        if (!repo.language) return;
+//     repos.forEach(repo => {
+//         if (!repo.language) return;
 
-        if (!stats[repo.language]) {
-            stats[repo.language] = { count: 0, stars: 0, percentage: 0 };
-        }
+//         if (!stats[repo.language]) {
+//             stats[repo.language] = { count: 0, stars: 0, percentage: 0 };
+//         }
 
-        stats[repo.language].count++;
-        stats[repo.language].stars += repo.stars;
-    });
+//         stats[repo.language].count++;
+//         stats[repo.language].stars += repo.stars;
+//     });
 
-    const total = Object.values(stats).reduce((sum, stat) => sum + stat.count, 0);
+//     const total = Object.values(stats).reduce((sum, stat) => sum + stat.count, 0);
 
-    Object.values(stats).forEach(stat => {
-        stat.percentage = calculatePercentage(stat.count, total);
-    });
+//     Object.values(stats).forEach(stat => {
+//         stat.percentage = calculatePercentage(stat.count, total);
+//     });
 
-    return stats;
-}
+//     return stats;
+// }
 
 interface TimelineStat {
     count: number;
@@ -208,11 +208,11 @@ function calculateTimeline(repos: Repository[]): Record<string, TimelineStat> {
     return timeline;
 }
 
-function getTopRepos(repos: Repository[], limit: number): Repository[] {
-    return [...repos]
-        .sort((a, b) => b.stars - a.stars)
-        .slice(0, limit);
-}
+// function getTopRepos(repos: Repository[], limit: number): Repository[] {
+//     return [...repos]
+//         .sort((a, b) => b.stars - a.stars)
+//         .slice(0, limit);
+// }
 
 function formatDate(date: Date): string {
     return date.toISOString().split('T')[0];

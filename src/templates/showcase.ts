@@ -17,7 +17,7 @@ export const showcaseTemplate: Template = {
         const username = profile.username;
         const name = profile.name || username;
 
-        const baseUrl = 'https://skillicons.dev/icons?i=';
+        // const baseUrl = 'https://skillicons.dev/icons?i=';
         const iconMapping: Record<string, string> = {
             'javascript': 'js',
             'typescript': 'ts',

@@ -184,8 +184,8 @@ export const generateCommand = new Command('generate')
         try {
           content = await makeAssetsLocal(content, options.output);
           logger.success('Assets downloaded to ./assets/ folder');
-        } catch (err: any) {
-          logger.warn(`Failed to download some assets: ${err.message}`);
+        } catch (err: unknown) {
+          logger.warn(`Failed to download some assets: ${err as string}`);
         }
         logger.stop();
       }
