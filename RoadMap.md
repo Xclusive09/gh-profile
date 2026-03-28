@@ -58,7 +58,7 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 - Example plugins included in repo
 
 ---
-## 🚧 In Progress
+##  ✅ Completed
 
 ### v1.0.0 (Stable CLI Release)
 - Stable plugin API
@@ -69,15 +69,17 @@ Make it easy for developers to generate and maintain high-quality GitHub profile
 
 ---
 
-## 🌐 Future (Web UI)
+### v2.0.0 - Web UI (Planned)
 
-### v2.0.0
-- Web interface for gh-profile
-- Paste GitHub profile URL
-- Select template category and style
-- Toggle plugins visually
-- Live README preview
-- Export or sync README to GitHub
+#### Core
+- [ ] Decide tech stack (Next.js)
+- [ ] Extract CLI core into a shared `core/` package (so web + CLI stay in sync)
+
+#### UI Features
+- [ ] Landing page + profile input
+- [ ] Template gallery with live preview
+- [ ] Plugin toggles (visual version of your config)
+- [ ] Export README + "Copy to GitHub" button
 
 ---
 

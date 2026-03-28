@@ -214,6 +214,16 @@ gh-profile/
 └── dist/
 ```
 
+## Coming Next: Web UI (v2.0.0)
+
+We're building a beautiful web interface so non-CLI users can:
+- Paste any GitHub profile URL
+- Visually toggle plugins & templates
+- See live README preview
+- Export or sync directly to GitHub
+
+**Want to help build it?** Check the [v2.0.0 Web UI milestone](#) and the [Roadmap](RoadMap.md). All skill levels welcome — especially folks learning web dev!
+
 ## Contributing
 
 PRs welcome. Check out [CONTRIBUTING.md](CONTRIBUTING.md) first.
