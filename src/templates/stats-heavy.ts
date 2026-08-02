@@ -155,35 +155,6 @@ function countActive(repos: Repository[]): number {
     return repos.filter(r => !r.isArchived && r.pushedAt > threeMonthsAgo).length;
 }
 
-interface LanguageStat {
-    count: number;
-    stars: number;
-    percentage: number;
-}
-
-// function calculateLanguageStats(repos: Repository[]): Record<string, LanguageStat> {
-//     const stats: Record<string, LanguageStat> = {};
-
-//     repos.forEach(repo => {
-//         if (!repo.language) return;
-
-//         if (!stats[repo.language]) {
-//             stats[repo.language] = { count: 0, stars: 0, percentage: 0 };
-//         }
-
-//         stats[repo.language].count++;
-//         stats[repo.language].stars += repo.stars;
-//     });
-
-//     const total = Object.values(stats).reduce((sum, stat) => sum + stat.count, 0);
-
-//     Object.values(stats).forEach(stat => {
-//         stat.percentage = calculatePercentage(stat.count, total);
-//     });
-
-//     return stats;
-// }
-
 interface TimelineStat {
     count: number;
     stars: number;
