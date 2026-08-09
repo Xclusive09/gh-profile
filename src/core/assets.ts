@@ -26,7 +26,7 @@ async function downloadFile(url: string, dest: string, retries = 3): Promise<voi
             const buffer = await response.arrayBuffer();
             await fs.writeFile(dest, Buffer.from(buffer));
             return; // Success
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (i === retries - 1) throw err; // Throw on last attempt
             const delay = Math.pow(2, i) * 1000;
             await new Promise(res => setTimeout(res, delay));
@@ -70,8 +70,7 @@ export async function makeAssetsLocal(
     // Ensure assets directory exists
     try {
         await fs.mkdir(assetsDir, { recursive: true });
-    } catch (e) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch {
         // ignore if exists
     }
 
